@@ -1,0 +1,2 @@
+Build failed:
+[10-Mar-2026 1:05:52 AM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlask.cs(112, 58)] CS0103: The name 'countdown' does not exist in the current context

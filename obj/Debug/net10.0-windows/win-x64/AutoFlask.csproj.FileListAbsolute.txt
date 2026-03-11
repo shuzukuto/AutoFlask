@@ -18,3 +18,5 @@ E:\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\obj\Debug\net10.0-windo
 E:\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\obj\Debug\net10.0-windows\win-x64\AutoFlask.dll
 E:\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\obj\Debug\net10.0-windows\win-x64\refint\AutoFlask.dll
 E:\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\obj\Debug\net10.0-windows\win-x64\ref\AutoFlask.dll
+E:\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\obj\Debug\net10.0-windows\win-x64\AutoFlask.sourcelink.json
+C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\obj\Debug\net10.0-windows\win-x64\AutoFlask.sourcelink.json

@@ -1,2 +1,4 @@
 Build failed:
-[10-Mar-2026 1:05:52 AM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlask.cs(112, 58)] CS0103: The name 'countdown' does not exist in the current context
+[10-Mar-2026 5:20:00 PM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlaskSettings.cs(23, 87)] CS0595: Invalid real literal.
+[10-Mar-2026 5:20:00 PM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlaskSettings.cs(23, 87)] CS1519: Invalid token '5e' in a member declaration
+[10-Mar-2026 5:20:00 PM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlaskSettings.cs(23, 125)] CS1585: Member modifier 'public' must precede the member type and name

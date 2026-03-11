@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ExileCore;
 using ExileCore.PoEMemory.Components;
+using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared.Attributes;
+using ExileCore.Shared.Enums;
 using ExileCore.Shared.Interfaces;
 using SharpDX;
 
@@ -12,64 +15,99 @@ namespace AutoFlask
 {
     public class AutoFlask : BaseSettingsPlugin<AutoFlaskSettings>
     {
-        // Timers for different categories
         private readonly Stopwatch _utilityFlaskTimer = new Stopwatch();
         private readonly Stopwatch _lifeFlaskThrottle = new Stopwatch();
         private readonly Stopwatch _skill1Timer = new Stopwatch();
         private readonly Stopwatch _skill2Timer = new Stopwatch();
+        private readonly Stopwatch _mouseThrottle = new Stopwatch();
 
         [DllImport("user32.dll")]
         public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
 
         private const uint KEYEVENTF_KEYUP = 0x0002;
-        private readonly byte[] _utilityFlaskKeys = { 0x31, 0x32, 0x33, 0x34 }; // Keys 1-4
-        private const byte VK_5 = 0x35; // Key 5
+        private readonly byte[] _utilityFlaskKeys = { 0x31, 0x32, 0x33, 0x34 };
+        private const byte VK_5 = 0x35;
+
+        private Entity _currentTarget;
 
         public override bool Initialise()
         {
-            Name = "Auto Flask & Skill Pro";
-            
-            // Start all timers
+            Name = "Auto Flask & Monster Tracer";
             _utilityFlaskTimer.Start();
             _lifeFlaskThrottle.Start();
             _skill1Timer.Start();
             _skill2Timer.Start();
-
+            _mouseThrottle.Start();
             return true;
         }
 
         public override Job Tick()
         {
-            // Toggle Logic via Hotkey
             if (Settings.ToggleAutoFlask.PressedOnce())
             {
                 Settings.IsAutoFlaskEnabled.Value = !Settings.IsAutoFlaskEnabled.Value;
-                DebugWindow.LogMsg($"[AutoFlask] Status: {Settings.IsAutoFlaskEnabled.Value}", 3, Color.Yellow);
+                DebugWindow.LogMsg($"[AutoFlask] Active: {Settings.IsAutoFlaskEnabled.Value}", 3, Color.Yellow);
             }
 
-            // Global and Game State Checks
             if (!Settings.Enable || !Settings.IsAutoFlaskEnabled.Value)
                 return base.Tick();
 
             if (!GameController.InGame || GameController.IsLoading || !GameController.Player.IsAlive)
                 return base.Tick();
 
-            // 1. Emergency Life Flask (Highest Priority)
+            // 1. Monster Tracing Logic
+            HandleMonsterTracing();
+
+            // 2. Flask & Skill Logic
             HandleLifeFlask();
-
-            // 2. Utility Flasks (Interval based)
             HandleUtilityFlasks();
-
-            // 3. Skill Management (Individual Cooldowns)
             HandleSkills();
 
             return base.Tick();
         }
 
+        private void HandleMonsterTracing()
+        {
+            if (!Settings.IsTracingMonstersEnabled.Value)
+            {
+                _currentTarget = null;
+                return;
+            }
+
+            // Safety: Don't move mouse if game is not the active window
+            if (!GameController.Window.IsForeground()) return;
+
+            if (_mouseThrottle.ElapsedMilliseconds < 50) return;
+            _mouseThrottle.Restart();
+
+            _currentTarget = GameController.EntityListWrapper.Entities
+                .Where(e => e.Type == EntityType.Monster && 
+                            e.IsHostile && 
+                            e.IsAlive && 
+                            e.IsTargetable &&
+                            e.DistancePlayer <= 80)
+                .OrderByDescending(e => (int)e.Rarity)
+                .ThenBy(e => e.DistancePlayer)
+                .FirstOrDefault();
+
+            if (_currentTarget != null)
+            {
+                var screenPos = GameController.IngameState.Camera.WorldToScreen(_currentTarget.Pos);
+                if (screenPos != Vector2.Zero)
+                {
+                    // Use the built-in Input.SetCursorPos from ExileCore
+                    // We multiply by GameController.Window.GetWindowRectangle().Location 
+                    // only if the API requires absolute screen coordinates. 
+                    // Standard ExileCore Input.SetCursorPos usually handles this.
+                    var windowRect = GameController.Window.GetWindowRectangle();
+                    Input.SetCursorPos(screenPos + windowRect.Location);
+                }
+            }
+        }
+
         private void HandleLifeFlask()
         {
-            if (!Settings.IsLifeFlaskEnabled.Value) return;
-            if (_lifeFlaskThrottle.ElapsedMilliseconds < 500) return;
+            if (!Settings.IsLifeFlaskEnabled.Value || _lifeFlaskThrottle.ElapsedMilliseconds < 600) return;
 
             var life = GameController.Player.GetComponent<Life>();
             if (life == null) return;
@@ -79,20 +117,18 @@ namespace AutoFlask
             {
                 _lifeFlaskThrottle.Restart();
                 SendKeyPress(VK_5);
-                DebugWindow.LogMsg($"[AutoFlask] Emergency HP: {hpPercent:F0}% - Key 5 Sent", 2, Color.Red);
             }
         }
 
         private void HandleUtilityFlasks()
         {
-            if (!Settings.IsUltilityFlaskEnabled.Value) return;
-            if (_utilityFlaskTimer.ElapsedMilliseconds < Settings.TimeBetweenActions.Value) return;
+            if (!Settings.IsUltilityFlaskEnabled.Value || _utilityFlaskTimer.ElapsedMilliseconds < Settings.TimeBetweenActions.Value) return;
 
             _utilityFlaskTimer.Restart();
             foreach (var key in _utilityFlaskKeys)
             {
                 SendKeyPress(key);
-                Thread.Sleep(15); // Tiny gap between flask presses
+                Thread.Sleep(15);
             }
         }
 
@@ -100,15 +136,12 @@ namespace AutoFlask
         {
             if (!Settings.IsSkillEnabled.Value) return;
 
-            // Handle Skill 1
             if (_skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
             {
                 _skill1Timer.Restart();
                 SendKeyPress((byte)Settings.Skill1.Hotkey.Value);
-                Thread.Sleep(10);
             }
 
-            // Handle Skill 2
             if (_skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
             {
                 _skill2Timer.Restart();
@@ -118,37 +151,24 @@ namespace AutoFlask
 
         private void SendKeyPress(byte key)
         {
-            // Authentic Press/Release with standard 25ms delay
-            keybd_event(key, 0, 0, 0); // Down
+            keybd_event(key, 0, 0, 0);
             Thread.Sleep(25);
-            keybd_event(key, 0, KEYEVENTF_KEYUP, 0); // Up
+            keybd_event(key, 0, KEYEVENTF_KEYUP, 0);
         }
 
         public override void Render()
         {
             if (!Settings.Enable || !Settings.IsAutoFlaskEnabled.Value) return;
 
+            // Recalculate variables for drawing
             var life = GameController.Player.GetComponent<Life>();
-            if (life == null) return;
-
-            float hpPercent = (float)life.CurHP / life.MaxHP * 100;
+            float hpPercent = life != null ? (float)life.CurHP / life.MaxHP * 100 : 0;
             var flaskCountdown = Math.Max(0, Settings.TimeBetweenActions.Value - _utilityFlaskTimer.ElapsedMilliseconds);
             
             var drawPos = new Vector2(30, 120);
             
-            // UI Overlay
-            Graphics.DrawText($"Auto [ON] | Flask: {flaskCountdown}ms | HP: {hpPercent:F0}%", drawPos, Color.Cyan);
-
-            // Cooldown Indicators for Skills
-            var s1Cd = Math.Max(0, Settings.Skill1Cooldown.Value - _skill1Timer.ElapsedMilliseconds);
-            var s2Cd = Math.Max(0, Settings.Skill2Cooldown.Value - _skill2Timer.ElapsedMilliseconds);
-            
-            Graphics.DrawText($"S1 CD: {s1Cd}ms | S2 CD: {s2Cd}ms", drawPos + new Vector2(0, 20), Color.White);
-
-            if (hpPercent <= Settings.LifeFlaskPercentage.Value && Settings.IsLifeFlaskEnabled.Value)
-            {
-                Graphics.DrawText("!! LOW HEALTH !!", drawPos + new Vector2(0, 40), Color.Red);
-            }
+            // Single line status display in English
+            Graphics.DrawText($"Auto [ON] | Next Flask: {flaskCountdown}ms | HP: {hpPercent:F0}% | Tracer: {(_currentTarget != null ? "Targeting" : "Scanning")}", drawPos, Color.Cyan);
         }
     }
 }

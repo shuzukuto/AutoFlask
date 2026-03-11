@@ -18,7 +18,8 @@ namespace AutoFlask
         public ToggleNode IsLifeFlaskEnabled { get; set; } = new ToggleNode(true);
         [Menu("HP Percentage to use Life Flask")] public RangeNode<int> LifeFlaskPercentage { get; set; } = new RangeNode<int>(10, 10, 100);
         
-        public ToggleNode IsSkillEnabled { get; set; } = new ToggleNode(true);
+        public ToggleNode IsSkillEnabled { get; set; } = new ToggleNode(false);
+        public ToggleNode IsTracingMonstersEnabled { get; set; } = new ToggleNode(false);
         public Skill Skill1 { get; set; } = new Skill { Hotkey = (HotkeyNode)Keys.W };
         [Menu("Skill 1 Cooldown")] public RangeNode<int> Skill1Cooldown { get; set; } = new RangeNode<int>(100, 10, 3000);
         public Skill Skill2 { get; set; } = new Skill { Hotkey = (HotkeyNode)Keys.E };

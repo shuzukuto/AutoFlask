@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "NSAsNqnVYs8=",
+  "dgSpecHash": "RHvV7pqsCF8=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ptlua\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj",
+  "projectFilePath": "E:\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ptlua\\.nuget\\packages\\imgui.net\\1.90.0.1\\imgui.net.1.90.0.1.nupkg.sha512",
     "C:\\Users\\ptlua\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",

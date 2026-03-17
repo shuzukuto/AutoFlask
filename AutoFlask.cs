@@ -19,6 +19,7 @@ namespace AutoFlask
         private readonly Stopwatch _lifeFlaskThrottle = new Stopwatch();
         private readonly Stopwatch _skill1Timer = new Stopwatch();
         private readonly Stopwatch _skill2Timer = new Stopwatch();
+        private readonly Stopwatch _skill3Timer = new Stopwatch(); // New Timer
         private readonly Stopwatch _mouseThrottle = new Stopwatch();
 
         [DllImport("user32.dll")]
@@ -32,11 +33,12 @@ namespace AutoFlask
 
         public override bool Initialise()
         {
-            Name = "Auto Flask & Monster Tracer";
+            Name = "Auto Flask & Triple Skill Bot";
             _utilityFlaskTimer.Start();
             _lifeFlaskThrottle.Start();
             _skill1Timer.Start();
             _skill2Timer.Start();
+            _skill3Timer.Start();
             _mouseThrottle.Start();
             return true;
         }
@@ -55,10 +57,7 @@ namespace AutoFlask
             if (!GameController.InGame || GameController.IsLoading || !GameController.Player.IsAlive)
                 return base.Tick();
 
-            // 1. Monster Tracing Logic
             HandleMonsterTracing();
-
-            // 2. Flask & Skill Logic
             HandleLifeFlask();
             HandleUtilityFlasks();
             HandleSkills();
@@ -68,24 +67,17 @@ namespace AutoFlask
 
         private void HandleMonsterTracing()
         {
-            if (!Settings.IsTracingMonstersEnabled.Value)
+            if (!Settings.IsTracingMonstersEnabled.Value || !GameController.Window.IsForeground())
             {
                 _currentTarget = null;
                 return;
             }
 
-            // Safety: Don't move mouse if game is not the active window
-            if (!GameController.Window.IsForeground()) return;
-
             if (_mouseThrottle.ElapsedMilliseconds < 50) return;
             _mouseThrottle.Restart();
 
             _currentTarget = GameController.EntityListWrapper.Entities
-                .Where(e => e.Type == EntityType.Monster && 
-                            e.IsHostile && 
-                            e.IsAlive && 
-                            e.IsTargetable &&
-                            e.DistancePlayer <= 80)
+                .Where(e => e.Type == EntityType.Monster && e.IsHostile && e.IsAlive && e.IsTargetable && e.DistancePlayer <= 80)
                 .OrderByDescending(e => (int)e.Rarity)
                 .ThenBy(e => e.DistancePlayer)
                 .FirstOrDefault();
@@ -95,10 +87,6 @@ namespace AutoFlask
                 var screenPos = GameController.IngameState.Camera.WorldToScreen(_currentTarget.Pos);
                 if (screenPos != Vector2.Zero)
                 {
-                    // Use the built-in Input.SetCursorPos from ExileCore
-                    // We multiply by GameController.Window.GetWindowRectangle().Location 
-                    // only if the API requires absolute screen coordinates. 
-                    // Standard ExileCore Input.SetCursorPos usually handles this.
                     var windowRect = GameController.Window.GetWindowRectangle();
                     Input.SetCursorPos(screenPos + windowRect.Location);
                 }
@@ -136,16 +124,29 @@ namespace AutoFlask
         {
             if (!Settings.IsSkillEnabled.Value) return;
 
+            // Optional: Get Mana component to prevent dry firing
+            var life = GameController.Player.GetComponent<Life>();
+            if (life == null || life.CurMana < 10) return; // Basic mana safety
+
+            // Skill 1 Logic
             if (_skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
             {
                 _skill1Timer.Restart();
-                SendKeyPress((byte)Settings.Skill1.Hotkey.Value);
+                SendKeyPress((byte)Settings.Skill1Key.Value);
             }
 
+            // Skill 2 Logic
             if (_skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
             {
                 _skill2Timer.Restart();
-                SendKeyPress((byte)Settings.Skill2.Hotkey.Value);
+                SendKeyPress((byte)Settings.Skill2Key.Value);
+            }
+
+            // Skill 3 Logic
+            if (_skill3Timer.ElapsedMilliseconds >= Settings.Skill3Cooldown.Value)
+            {
+                _skill3Timer.Restart();
+                SendKeyPress((byte)Settings.Skill3Key.Value);
             }
         }
 
@@ -160,15 +161,11 @@ namespace AutoFlask
         {
             if (!Settings.Enable || !Settings.IsAutoFlaskEnabled.Value) return;
 
-            // Recalculate variables for drawing
             var life = GameController.Player.GetComponent<Life>();
             float hpPercent = life != null ? (float)life.CurHP / life.MaxHP * 100 : 0;
-            var flaskCountdown = Math.Max(0, Settings.TimeBetweenActions.Value - _utilityFlaskTimer.ElapsedMilliseconds);
             
             var drawPos = new Vector2(30, 120);
-            
-            // Single line status display in English
-            Graphics.DrawText($"Auto [ON] | Next Flask: {flaskCountdown}ms | HP: {hpPercent:F0}% | Tracer: {(_currentTarget != null ? "Targeting" : "Scanning")}", drawPos, Color.Cyan);
+            Graphics.DrawText($"Auto [ON] | HP: {hpPercent:F0}% | S3 CD: {Math.Max(0, Settings.Skill3Cooldown.Value - _skill3Timer.ElapsedMilliseconds)}ms", drawPos, Color.Cyan);
         }
     }
 }

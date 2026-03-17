@@ -1,25 +1,32 @@
 {
   "format": 1,
   "restore": {
-    "E:\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj": {}
+    "C:\\Users\\ptlua\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj": {}
   },
   "projects": {
-    "E:\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj": {
+    "C:\\Users\\ptlua\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj",
+        "projectUniqueName": "C:\\Users\\ptlua\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj",
         "projectName": "AutoFlask",
-        "projectPath": "E:\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj",
+        "projectPath": "C:\\Users\\ptlua\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\AutoFlask.csproj",
         "packagesPath": "C:\\Users\\ptlua\\.nuget\\packages\\",
-        "outputPath": "E:\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\obj\\",
+        "outputPath": "C:\\Users\\ptlua\\OneDrive\\Game\\POE 1\\ExileApi\\Plugins\\Source\\AutoFlask\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ptlua\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\ptlua\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0-windows"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

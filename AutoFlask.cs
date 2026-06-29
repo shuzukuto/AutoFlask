@@ -88,6 +88,9 @@ namespace AutoFlask
             if (!GameController.InGame || GameController.IsLoading || !GameController.Player.IsAlive)
                 return base.Tick();
 
+            if (GameController.Area.CurrentArea == null || GameController.Area.CurrentArea.IsHideout || GameController.Area.CurrentArea.IsTown)
+                return base.Tick();
+
             HandleMonsterTracing();
             HandleLifeFlask();
             HandleManaFlask();

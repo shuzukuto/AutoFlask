@@ -46,6 +46,9 @@ namespace AutoFlask
 
         private Entity _currentTarget;
 
+        private readonly Dictionary<string, Stopwatch> _areaTimers = new Dictionary<string, Stopwatch>();
+        private string _currentAreaName;
+
         public override bool Initialise()
         {
             Name = "Auto Flask & Triple Skill Bot";
@@ -85,7 +88,42 @@ namespace AutoFlask
             if (!Settings.Enable || !Settings.IsAutoFlaskEnabled.Value)
                 return base.Tick();
 
-            if (!GameController.InGame || GameController.IsLoading || !GameController.Player.IsAlive)
+            if (!GameController.InGame || GameController.IsLoading)
+            {
+                if (!string.IsNullOrEmpty(_currentAreaName) && _areaTimers.TryGetValue(_currentAreaName, out var currentStopwatch))
+                {
+                    currentStopwatch.Stop();
+                }
+                return base.Tick();
+            }
+
+            // Track area time
+            var currentArea = GameController.Area.CurrentArea;
+            if (currentArea != null)
+            {
+                var areaName = currentArea.Name;
+                if (areaName != _currentAreaName)
+                {
+                    if (!string.IsNullOrEmpty(_currentAreaName) && _areaTimers.TryGetValue(_currentAreaName, out var prevStopwatch))
+                    {
+                        prevStopwatch.Stop();
+                    }
+                    _currentAreaName = areaName;
+                }
+
+                if (!_areaTimers.TryGetValue(areaName, out var currentStopwatch))
+                {
+                    currentStopwatch = new Stopwatch();
+                    _areaTimers[areaName] = currentStopwatch;
+                }
+
+                if (!currentStopwatch.IsRunning)
+                {
+                    currentStopwatch.Start();
+                }
+            }
+
+            if (!GameController.Player.IsAlive)
                 return base.Tick();
 
             if (GameController.Area.CurrentArea == null || GameController.Area.CurrentArea.IsHideout || GameController.Area.CurrentArea.IsTown)
@@ -419,7 +457,15 @@ namespace AutoFlask
             float manaPercent = life != null ? (float)life.CurMana / life.MaxMana * 100 : 0;
             
             var drawPos = new Vector2(30, 120);
-            Graphics.DrawText($"Auto [ON] | HP: {hpPercent:F0}% | Mana: {manaPercent:F0}% | S3 CD: {Math.Max(0, Settings.Skill3Cooldown.Value - _skill3Timer.ElapsedMilliseconds)}ms", drawPos, Color.Cyan);
+
+            string areaTimeStr = "00:00:00";
+            if (!string.IsNullOrEmpty(_currentAreaName) && _areaTimers.TryGetValue(_currentAreaName, out var currentStopwatch))
+            {
+                var ts = currentStopwatch.Elapsed;
+                areaTimeStr = string.Format("{0:00}:{1:00}:{2:00}", (int)ts.TotalHours, ts.Minutes, ts.Seconds);
+            }
+
+            Graphics.DrawText($"Auto [ON] | HP: {hpPercent:F0}% | Mana: {manaPercent:F0}% | Area Time ({_currentAreaName}): {areaTimeStr} | S3 CD: {Math.Max(0, Settings.Skill3Cooldown.Value - _skill3Timer.ElapsedMilliseconds)}ms", drawPos, Color.Cyan);
         }
     }
 }

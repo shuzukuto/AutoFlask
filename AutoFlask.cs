@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -234,38 +235,138 @@ namespace AutoFlask
             }
         }
 
+        private static readonly string[] LifeFlaskBuffs = { "flask_effect_life" };
+        private static readonly string[] ManaFlaskBuffs =
+        {
+            "flask_effect_mana",
+            "flask_effect_mana_not_removed_when_full",
+            "flask_instant_mana_recovery_at_end_of_effect"
+        };
+
+        private IEnumerable<string> GetFlaskBuffNames(Flask flask)
+        {
+            var type = flask.M.Read<int>(flask.Address + 0x28, 0x10);
+            return type switch
+            {
+                1 => LifeFlaskBuffs,
+                2 => ManaFlaskBuffs,
+                3 => LifeFlaskBuffs.Concat(ManaFlaskBuffs),
+                4 when flask.M.ReadStringU(flask.M.Read<long>(flask.Address + 0x28, 0x18, 0x0)) is { } s and not "" => new[] { s },
+                _ => Enumerable.Empty<string>()
+            };
+        }
+
+        private bool IsUtilityFlaskAvailable(int index)
+        {
+            try
+            {
+                var flaskInventory = GameController.IngameState.ServerData.PlayerInventories.LastOrDefault(x => x.TypeId == InventoryNameE.Flask1);
+                if (flaskInventory == null || flaskInventory.Inventory == null) return false;
+
+                var flaskItem = flaskInventory.Inventory[index, 0];
+                if (flaskItem?.Address == 0 || flaskItem?.Item?.Address == 0) return false;
+
+                var item = flaskItem.Item;
+                if (!item.TryGetComponent<Charges>(out var chargeComponent)) return false;
+                if (!item.TryGetComponent<Flask>(out var flask)) return false;
+
+                // Check charges
+                bool hasCharges = chargeComponent.NumCharges >= chargeComponent.ChargesPerUse;
+                if (!hasCharges) return false;
+
+                // Check active buffs
+                if (GameController.Player.TryGetComponent<Buffs>(out var playerBuffs))
+                {
+                    var buffNames = GetFlaskBuffNames(flask);
+                    bool isActive = playerBuffs.BuffsList.Any(b => buffNames.Contains(b.Name) && b.FlaskSlot == index);
+                    // "Use When Available" means use when NOT active
+                    return !isActive;
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugWindow.LogError($"[AutoFlask] Error checking flask {index + 1} availability: {ex.Message}");
+            }
+            return true;
+        }
+
         private void HandleUtilityFlasks()
         {
             if (!Settings.IsUltilityFlaskEnabled.Value) return;
 
-            if (Settings.IsUtilityFlask1Enabled.Value && _utilityFlask1Timer.ElapsedMilliseconds >= Settings.UtilityFlask1Cooldown.Value)
+            // Utility Flask 1
+            if (Settings.IsUtilityFlask1Enabled.Value)
             {
-                _utilityFlask1Timer.Restart();
-                SendKeyPress((byte)Settings.UtilityFlask1Key.Value);
+                bool cooldownReady = !Settings.UtilityFlask1CooldownEnable.Value || 
+                                     _utilityFlask1Timer.ElapsedMilliseconds >= Settings.UtilityFlask1Cooldown.Value;
+                bool availabilityReady = !Settings.UtilityFlask1UseWhenAvailable.Value || 
+                                         IsUtilityFlaskAvailable(0);
+
+                if (cooldownReady && availabilityReady)
+                {
+                    _utilityFlask1Timer.Restart();
+                    SendKeyPress((byte)Settings.UtilityFlask1Key.Value);
+                }
             }
 
-            if (Settings.IsUtilityFlask2Enabled.Value && _utilityFlask2Timer.ElapsedMilliseconds >= Settings.UtilityFlask2Cooldown.Value)
+            // Utility Flask 2
+            if (Settings.IsUtilityFlask2Enabled.Value)
             {
-                _utilityFlask2Timer.Restart();
-                SendKeyPress((byte)Settings.UtilityFlask2Key.Value);
+                bool cooldownReady = !Settings.UtilityFlask2CooldownEnable.Value || 
+                                     _utilityFlask2Timer.ElapsedMilliseconds >= Settings.UtilityFlask2Cooldown.Value;
+                bool availabilityReady = !Settings.UtilityFlask2UseWhenAvailable.Value || 
+                                         IsUtilityFlaskAvailable(1);
+
+                if (cooldownReady && availabilityReady)
+                {
+                    _utilityFlask2Timer.Restart();
+                    SendKeyPress((byte)Settings.UtilityFlask2Key.Value);
+                }
             }
 
-            if (Settings.IsUtilityFlask3Enabled.Value && _utilityFlask3Timer.ElapsedMilliseconds >= Settings.UtilityFlask3Cooldown.Value)
+            // Utility Flask 3
+            if (Settings.IsUtilityFlask3Enabled.Value)
             {
-                _utilityFlask3Timer.Restart();
-                SendKeyPress((byte)Settings.UtilityFlask3Key.Value);
+                bool cooldownReady = !Settings.UtilityFlask3CooldownEnable.Value || 
+                                     _utilityFlask3Timer.ElapsedMilliseconds >= Settings.UtilityFlask3Cooldown.Value;
+                bool availabilityReady = !Settings.UtilityFlask3UseWhenAvailable.Value || 
+                                         IsUtilityFlaskAvailable(2);
+
+                if (cooldownReady && availabilityReady)
+                {
+                    _utilityFlask3Timer.Restart();
+                    SendKeyPress((byte)Settings.UtilityFlask3Key.Value);
+                }
             }
 
-            if (Settings.IsUtilityFlask4Enabled.Value && _utilityFlask4Timer.ElapsedMilliseconds >= Settings.UtilityFlask4Cooldown.Value)
+            // Utility Flask 4
+            if (Settings.IsUtilityFlask4Enabled.Value)
             {
-                _utilityFlask4Timer.Restart();
-                SendKeyPress((byte)Settings.UtilityFlask4Key.Value);
+                bool cooldownReady = !Settings.UtilityFlask4CooldownEnable.Value || 
+                                     _utilityFlask4Timer.ElapsedMilliseconds >= Settings.UtilityFlask4Cooldown.Value;
+                bool availabilityReady = !Settings.UtilityFlask4UseWhenAvailable.Value || 
+                                         IsUtilityFlaskAvailable(3);
+
+                if (cooldownReady && availabilityReady)
+                {
+                    _utilityFlask4Timer.Restart();
+                    SendKeyPress((byte)Settings.UtilityFlask4Key.Value);
+                }
             }
 
-            if (Settings.IsUtilityFlask5Enabled.Value && _utilityFlask5Timer.ElapsedMilliseconds >= Settings.UtilityFlask5Cooldown.Value)
+            // Utility Flask 5
+            if (Settings.IsUtilityFlask5Enabled.Value)
             {
-                _utilityFlask5Timer.Restart();
-                SendKeyPress((byte)Settings.UtilityFlask5Key.Value);
+                bool cooldownReady = !Settings.UtilityFlask5CooldownEnable.Value || 
+                                     _utilityFlask5Timer.ElapsedMilliseconds >= Settings.UtilityFlask5Cooldown.Value;
+                bool availabilityReady = !Settings.UtilityFlask5UseWhenAvailable.Value || 
+                                         IsUtilityFlaskAvailable(4);
+
+                if (cooldownReady && availabilityReady)
+                {
+                    _utilityFlask5Timer.Restart();
+                    SendKeyPress((byte)Settings.UtilityFlask5Key.Value);
+                }
             }
         }
 

@@ -19,27 +19,37 @@ namespace AutoFlask
         [Menu("Utility Flask 1 Settings", 110, 100)] public EmptyNode UtilityFlask1Header { get; set; }
         [Menu("Enable Utility Flask 1", 111, 110)] public ToggleNode IsUtilityFlask1Enabled { get; set; } = new ToggleNode(true);
         [Menu("Key 1", 112, 110)] public HotkeyNode UtilityFlask1Key { get; set; } = Keys.D1;
-        [Menu("Cooldown 1 (ms)", 113, 110)] public RangeNode<int> UtilityFlask1Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Enable Cooldown 1", 113, 110)] public ToggleNode UtilityFlask1CooldownEnable { get; set; } = new ToggleNode(true);
+        [Menu("Cooldown 1 (ms)", 114, 110)] public RangeNode<int> UtilityFlask1Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Use When Available 1", 115, 110)] public ToggleNode UtilityFlask1UseWhenAvailable { get; set; } = new ToggleNode(false);
 
         [Menu("Utility Flask 2 Settings", 120, 100)] public EmptyNode UtilityFlask2Header { get; set; }
         [Menu("Enable Utility Flask 2", 121, 120)] public ToggleNode IsUtilityFlask2Enabled { get; set; } = new ToggleNode(true);
         [Menu("Key 2", 122, 120)] public HotkeyNode UtilityFlask2Key { get; set; } = Keys.D2;
-        [Menu("Cooldown 2 (ms)", 123, 120)] public RangeNode<int> UtilityFlask2Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Enable Cooldown 2", 123, 120)] public ToggleNode UtilityFlask2CooldownEnable { get; set; } = new ToggleNode(true);
+        [Menu("Cooldown 2 (ms)", 124, 120)] public RangeNode<int> UtilityFlask2Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Use When Available 2", 125, 120)] public ToggleNode UtilityFlask2UseWhenAvailable { get; set; } = new ToggleNode(false);
 
         [Menu("Utility Flask 3 Settings", 130, 100)] public EmptyNode UtilityFlask3Header { get; set; }
         [Menu("Enable Utility Flask 3", 131, 130)] public ToggleNode IsUtilityFlask3Enabled { get; set; } = new ToggleNode(true);
         [Menu("Key 3", 132, 130)] public HotkeyNode UtilityFlask3Key { get; set; } = Keys.D3;
-        [Menu("Cooldown 3 (ms)", 133, 130)] public RangeNode<int> UtilityFlask3Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Enable Cooldown 3", 133, 130)] public ToggleNode UtilityFlask3CooldownEnable { get; set; } = new ToggleNode(true);
+        [Menu("Cooldown 3 (ms)", 134, 130)] public RangeNode<int> UtilityFlask3Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Use When Available 3", 135, 130)] public ToggleNode UtilityFlask3UseWhenAvailable { get; set; } = new ToggleNode(false);
 
         [Menu("Utility Flask 4 Settings", 140, 100)] public EmptyNode UtilityFlask4Header { get; set; }
         [Menu("Enable Utility Flask 4", 141, 140)] public ToggleNode IsUtilityFlask4Enabled { get; set; } = new ToggleNode(true);
         [Menu("Key 4", 142, 140)] public HotkeyNode UtilityFlask4Key { get; set; } = Keys.D4;
-        [Menu("Cooldown 4 (ms)", 143, 140)] public RangeNode<int> UtilityFlask4Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Enable Cooldown 4", 143, 140)] public ToggleNode UtilityFlask4CooldownEnable { get; set; } = new ToggleNode(true);
+        [Menu("Cooldown 4 (ms)", 144, 140)] public RangeNode<int> UtilityFlask4Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Use When Available 4", 145, 140)] public ToggleNode UtilityFlask4UseWhenAvailable { get; set; } = new ToggleNode(false);
 
         [Menu("Utility Flask 5 Settings", 150, 100)] public EmptyNode UtilityFlask5Header { get; set; }
         [Menu("Enable Utility Flask 5", 151, 150)] public ToggleNode IsUtilityFlask5Enabled { get; set; } = new ToggleNode(true);
         [Menu("Key 5", 152, 150)] public HotkeyNode UtilityFlask5Key { get; set; } = Keys.D5;
-        [Menu("Cooldown 5 (ms)", 153, 150)] public RangeNode<int> UtilityFlask5Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Enable Cooldown 5", 153, 150)] public ToggleNode UtilityFlask5CooldownEnable { get; set; } = new ToggleNode(true);
+        [Menu("Cooldown 5 (ms)", 154, 150)] public RangeNode<int> UtilityFlask5Cooldown { get; set; } = new RangeNode<int>(5000, 10, 60000);
+        [Menu("Use When Available 5", 155, 150)] public ToggleNode UtilityFlask5UseWhenAvailable { get; set; } = new ToggleNode(false);
         
         [Menu("Life Flask Settings", 200)]
         public EmptyNode LifeHeader { get; set; }

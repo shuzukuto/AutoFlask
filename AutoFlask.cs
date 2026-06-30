@@ -129,7 +129,6 @@ namespace AutoFlask
             if (GameController.Area.CurrentArea == null || GameController.Area.CurrentArea.IsHideout || GameController.Area.CurrentArea.IsTown)
                 return base.Tick();
 
-            HandleMonsterTracing();
             HandleLifeFlask();
             HandleManaFlask();
             HandleUtilityFlasks();
@@ -138,16 +137,13 @@ namespace AutoFlask
             return base.Tick();
         }
 
-        private void HandleMonsterTracing()
+        private void TraceMonster()
         {
-            if (!Settings.IsTracingMonstersEnabled.Value || !GameController.Window.IsForeground())
+            if (!GameController.Window.IsForeground())
             {
                 _currentTarget = null;
                 return;
             }
-
-            if (_mouseThrottle.ElapsedMilliseconds < 50) return;
-            _mouseThrottle.Restart();
 
             _currentTarget = GameController.EntityListWrapper.Entities
                 .Where(e => e.Type == EntityType.Monster && e.IsHostile && e.IsAlive && e.IsTargetable && e.DistancePlayer <= 80)
@@ -422,6 +418,10 @@ namespace AutoFlask
             // Skill 1 Logic
             if (_skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
             {
+                if (Settings.Skill1TracingEnabled.Value)
+                {
+                    TraceMonster();
+                }
                 _skill1Timer.Restart();
                 SendKeyPress((byte)Settings.Skill1Key.Value);
             }
@@ -429,6 +429,10 @@ namespace AutoFlask
             // Skill 2 Logic
             if (_skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
             {
+                if (Settings.Skill2TracingEnabled.Value)
+                {
+                    TraceMonster();
+                }
                 _skill2Timer.Restart();
                 SendKeyPress((byte)Settings.Skill2Key.Value);
             }
@@ -436,6 +440,10 @@ namespace AutoFlask
             // Skill 3 Logic
             if (_skill3Timer.ElapsedMilliseconds >= Settings.Skill3Cooldown.Value)
             {
+                if (Settings.Skill3TracingEnabled.Value)
+                {
+                    TraceMonster();
+                }
                 _skill3Timer.Restart();
                 SendKeyPress((byte)Settings.Skill3Key.Value);
             }

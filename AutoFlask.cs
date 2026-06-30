@@ -137,16 +137,16 @@ namespace AutoFlask
             return base.Tick();
         }
 
-        private void TraceMonster()
+        private bool TraceMonster(float maxDistance)
         {
             if (!GameController.Window.IsForeground())
             {
                 _currentTarget = null;
-                return;
+                return false;
             }
 
             _currentTarget = GameController.EntityListWrapper.Entities
-                .Where(e => e.Type == EntityType.Monster && e.IsHostile && e.IsAlive && e.IsTargetable && e.DistancePlayer <= 80)
+                .Where(e => e.Type == EntityType.Monster && e.IsHostile && e.IsAlive && e.IsTargetable && e.DistancePlayer <= maxDistance)
                 .OrderByDescending(e => (int)e.Rarity)
                 .ThenBy(e => e.DistancePlayer)
                 .FirstOrDefault();
@@ -158,8 +158,10 @@ namespace AutoFlask
                 {
                     var windowRect = GameController.Window.GetWindowRectangle();
                     Input.SetCursorPos(screenPos + windowRect.Location);
+                    return true;
                 }
             }
+            return false;
         }
 
         private void HandleLifeFlask()
@@ -416,34 +418,49 @@ namespace AutoFlask
             // Skill 1 Logic
             if (Settings.Skill1Enabled.Value && _skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
             {
+                bool canCast = true;
                 if (Settings.Skill1TracingEnabled.Value)
                 {
-                    TraceMonster();
+                    canCast = TraceMonster(60f);
                 }
-                _skill1Timer.Restart();
-                SendKeyPress((byte)Settings.Skill1Key.Value);
+
+                if (canCast)
+                {
+                    _skill1Timer.Restart();
+                    SendKeyPress((byte)Settings.Skill1Key.Value);
+                }
             }
 
             // Skill 2 Logic
             if (Settings.Skill2Enabled.Value && _skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
             {
+                bool canCast = true;
                 if (Settings.Skill2TracingEnabled.Value)
                 {
-                    TraceMonster();
+                    canCast = TraceMonster(60f);
                 }
-                _skill2Timer.Restart();
-                SendKeyPress((byte)Settings.Skill2Key.Value);
+
+                if (canCast)
+                {
+                    _skill2Timer.Restart();
+                    SendKeyPress((byte)Settings.Skill2Key.Value);
+                }
             }
 
             // Skill 3 Logic
             if (Settings.Skill3Enabled.Value && _skill3Timer.ElapsedMilliseconds >= Settings.Skill3Cooldown.Value)
             {
+                bool canCast = true;
                 if (Settings.Skill3TracingEnabled.Value)
                 {
-                    TraceMonster();
+                    canCast = TraceMonster(60f);
                 }
-                _skill3Timer.Restart();
-                SendKeyPress((byte)Settings.Skill3Key.Value);
+
+                if (canCast)
+                {
+                    _skill3Timer.Restart();
+                    SendKeyPress((byte)Settings.Skill3Key.Value);
+                }
             }
         }
 

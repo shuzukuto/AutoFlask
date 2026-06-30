@@ -131,21 +131,23 @@ namespace AutoFlask
         
         [Menu("Skill & Targeting Settings", 300)]
         public EmptyNode SkillHeader { get; set; }
-        [Menu("Enable Skills", 301, 300)] public ToggleNode IsSkillEnabled { get; set; } = new ToggleNode(false);
 
         [Menu("Skill 1 Settings", 310, 300)] public EmptyNode Skill1Header { get; set; }
-        [Menu("Skill 1 Key", 311, 310)] public HotkeyNode Skill1Key { get; set; } = Keys.W;
-        [Menu("Skill 1 Cooldown", 312, 310)] public RangeNode<int> Skill1Cooldown { get; set; } = new RangeNode<int>(5000, 100, 30000);
-        [Menu("Skill 1 Tracing", 313, 310)] public ToggleNode Skill1TracingEnabled { get; set; } = new ToggleNode(false);
+        [Menu("Enable Skill 1", 311, 310)] public ToggleNode Skill1Enabled { get; set; } = new ToggleNode(false);
+        [Menu("Skill 1 Key", 312, 310)] public HotkeyNode Skill1Key { get; set; } = Keys.W;
+        [Menu("Skill 1 Cooldown", 313, 310)] public RangeNode<int> Skill1Cooldown { get; set; } = new RangeNode<int>(5000, 100, 30000);
+        [Menu("Skill 1 Tracing", 314, 310)] public ToggleNode Skill1TracingEnabled { get; set; } = new ToggleNode(false);
         
         [Menu("Skill 2 Settings", 320, 300)] public EmptyNode Skill2Header { get; set; }
-        [Menu("Skill 2 Key", 321, 320)] public HotkeyNode Skill2Key { get; set; } = Keys.E;
-        [Menu("Skill 2 Cooldown", 322, 320)] public RangeNode<int> Skill2Cooldown { get; set; } = new RangeNode<int>(10000, 100, 30000);
-        [Menu("Skill 2 Tracing", 323, 320)] public ToggleNode Skill2TracingEnabled { get; set; } = new ToggleNode(false);
+        [Menu("Enable Skill 2", 321, 320)] public ToggleNode Skill2Enabled { get; set; } = new ToggleNode(false);
+        [Menu("Skill 2 Key", 322, 320)] public HotkeyNode Skill2Key { get; set; } = Keys.E;
+        [Menu("Skill 2 Cooldown", 323, 320)] public RangeNode<int> Skill2Cooldown { get; set; } = new RangeNode<int>(10000, 100, 30000);
+        [Menu("Skill 2 Tracing", 324, 320)] public ToggleNode Skill2TracingEnabled { get; set; } = new ToggleNode(false);
 
         [Menu("Skill 3 Settings", 330, 300)] public EmptyNode Skill3Header { get; set; }
-        [Menu("Skill 3 Key", 331, 330)] public HotkeyNode Skill3Key { get; set; } = Keys.R;
-        [Menu("Skill 3 Cooldown", 332, 330)] public RangeNode<int> Skill3Cooldown { get; set; } = new RangeNode<int>(4000, 100, 30000);
-        [Menu("Skill 3 Tracing", 333, 330)] public ToggleNode Skill3TracingEnabled { get; set; } = new ToggleNode(false);
+        [Menu("Enable Skill 3", 331, 330)] public ToggleNode Skill3Enabled { get; set; } = new ToggleNode(false);
+        [Menu("Skill 3 Key", 332, 330)] public HotkeyNode Skill3Key { get; set; } = Keys.R;
+        [Menu("Skill 3 Cooldown", 333, 330)] public RangeNode<int> Skill3Cooldown { get; set; } = new RangeNode<int>(4000, 100, 30000);
+        [Menu("Skill 3 Tracing", 334, 330)] public ToggleNode Skill3TracingEnabled { get; set; } = new ToggleNode(false);
     }
 }

@@ -409,14 +409,12 @@ namespace AutoFlask
 
         private void HandleSkills()
         {
-            if (!Settings.IsSkillEnabled.Value) return;
-
             // Optional: Get Mana component to prevent dry firing
             var life = GameController.Player.GetComponent<Life>();
             if (life == null || life.CurMana < 10) return; // Basic mana safety
 
             // Skill 1 Logic
-            if (_skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
+            if (Settings.Skill1Enabled.Value && _skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
             {
                 if (Settings.Skill1TracingEnabled.Value)
                 {
@@ -427,7 +425,7 @@ namespace AutoFlask
             }
 
             // Skill 2 Logic
-            if (_skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
+            if (Settings.Skill2Enabled.Value && _skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
             {
                 if (Settings.Skill2TracingEnabled.Value)
                 {
@@ -438,7 +436,7 @@ namespace AutoFlask
             }
 
             // Skill 3 Logic
-            if (_skill3Timer.ElapsedMilliseconds >= Settings.Skill3Cooldown.Value)
+            if (Settings.Skill3Enabled.Value && _skill3Timer.ElapsedMilliseconds >= Settings.Skill3Cooldown.Value)
             {
                 if (Settings.Skill3TracingEnabled.Value)
                 {

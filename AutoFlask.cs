@@ -421,7 +421,7 @@ namespace AutoFlask
                 bool canCast = true;
                 if (Settings.Skill1TracingEnabled.Value)
                 {
-                    canCast = TraceMonster(60f);
+                    canCast = TraceMonster(Settings.Skill1TracingRange.Value);
                 }
 
                 if (canCast)
@@ -437,7 +437,7 @@ namespace AutoFlask
                 bool canCast = true;
                 if (Settings.Skill2TracingEnabled.Value)
                 {
-                    canCast = TraceMonster(60f);
+                    canCast = TraceMonster(Settings.Skill2TracingRange.Value);
                 }
 
                 if (canCast)
@@ -453,7 +453,7 @@ namespace AutoFlask
                 bool canCast = true;
                 if (Settings.Skill3TracingEnabled.Value)
                 {
-                    canCast = TraceMonster(60f);
+                    canCast = TraceMonster(Settings.Skill3TracingRange.Value);
                 }
 
                 if (canCast)

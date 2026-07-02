@@ -479,8 +479,6 @@ namespace AutoFlask
             float hpPercent = life != null ? (float)life.CurHP / life.MaxHP * 100 : 0;
             float manaPercent = life != null ? (float)life.CurMana / life.MaxMana * 100 : 0;
             
-            var drawPos = new Vector2(30, 120);
-
             string areaTimeStr = "00:00:00";
             if (!string.IsNullOrEmpty(_currentAreaName) && _areaTimers.TryGetValue(_currentAreaName, out var currentStopwatch))
             {
@@ -488,7 +486,37 @@ namespace AutoFlask
                 areaTimeStr = string.Format("{0:00}:{1:00}:{2:00}", (int)ts.TotalHours, ts.Minutes, ts.Seconds);
             }
 
-            Graphics.DrawText($"Auto [ON] | HP: {hpPercent:F0}% | Mana: {manaPercent:F0}% | Area Time ({_currentAreaName}): {areaTimeStr} | S3 CD: {Math.Max(0, Settings.Skill3Cooldown.Value - _skill3Timer.ElapsedMilliseconds)}ms", drawPos, Color.Cyan);
+            var skillCooldowns = new List<string>();
+            if (Settings.Skill1Enabled.Value)
+            {
+                skillCooldowns.Add($"S1: {Math.Max(0, Settings.Skill1Cooldown.Value - _skill1Timer.ElapsedMilliseconds)}ms");
+            }
+            if (Settings.Skill2Enabled.Value)
+            {
+                skillCooldowns.Add($"S2: {Math.Max(0, Settings.Skill2Cooldown.Value - _skill2Timer.ElapsedMilliseconds)}ms");
+            }
+            if (Settings.Skill3Enabled.Value)
+            {
+                skillCooldowns.Add($"S3: {Math.Max(0, Settings.Skill3Cooldown.Value - _skill3Timer.ElapsedMilliseconds)}ms");
+            }
+            string skillCdStr = skillCooldowns.Count > 0 ? string.Join(" | ", skillCooldowns) : "None";
+
+            var drawPos = new Vector2(30, 170);
+
+            // Line 1: Auto
+            Graphics.DrawText("Auto [ON]", drawPos, Color.Cyan);
+            drawPos.Y += 20;
+
+            // Line 2: HP|Mana
+            Graphics.DrawText($"HP: {hpPercent:F0}% | Mana: {manaPercent:F0}%", drawPos, Color.Cyan);
+            drawPos.Y += 20;
+
+            // Line 3: Area Time
+            Graphics.DrawText($"Area Time ({_currentAreaName}): {areaTimeStr}", drawPos, Color.Cyan);
+            drawPos.Y += 20;
+
+            // Line 4: Skill Cool Down
+            Graphics.DrawText($"Skill Cooldown: {skillCdStr}", drawPos, Color.Cyan);
         }
     }
 }

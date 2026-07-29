@@ -16,23 +16,11 @@ namespace AutoFlask
 {
     public class AutoFlask : BaseSettingsPlugin<AutoFlaskSettings>
     {
-        private readonly Stopwatch _utilityFlask1Timer = new Stopwatch();
-        private readonly Stopwatch _utilityFlask2Timer = new Stopwatch();
-        private readonly Stopwatch _utilityFlask3Timer = new Stopwatch();
-        private readonly Stopwatch _utilityFlask4Timer = new Stopwatch();
-        private readonly Stopwatch _utilityFlask5Timer = new Stopwatch();
-
-        private readonly Stopwatch _lifeFlask1Throttle = new Stopwatch();
-        private readonly Stopwatch _lifeFlask2Throttle = new Stopwatch();
-        private readonly Stopwatch _lifeFlask3Throttle = new Stopwatch();
-        private readonly Stopwatch _lifeFlask4Throttle = new Stopwatch();
-        private readonly Stopwatch _lifeFlask5Throttle = new Stopwatch();
-
-        private readonly Stopwatch _manaFlask1Throttle = new Stopwatch();
-        private readonly Stopwatch _manaFlask2Throttle = new Stopwatch();
-        private readonly Stopwatch _manaFlask3Throttle = new Stopwatch();
-        private readonly Stopwatch _manaFlask4Throttle = new Stopwatch();
-        private readonly Stopwatch _manaFlask5Throttle = new Stopwatch();
+        private readonly Stopwatch _flask1Timer = new Stopwatch();
+        private readonly Stopwatch _flask2Timer = new Stopwatch();
+        private readonly Stopwatch _flask3Timer = new Stopwatch();
+        private readonly Stopwatch _flask4Timer = new Stopwatch();
+        private readonly Stopwatch _flask5Timer = new Stopwatch();
 
         private readonly Stopwatch _skill1Timer = new Stopwatch();
         private readonly Stopwatch _skill2Timer = new Stopwatch();
@@ -52,23 +40,11 @@ namespace AutoFlask
         public override bool Initialise()
         {
             Name = "Auto Flask & Triple Skill Bot";
-            _utilityFlask1Timer.Start();
-            _utilityFlask2Timer.Start();
-            _utilityFlask3Timer.Start();
-            _utilityFlask4Timer.Start();
-            _utilityFlask5Timer.Start();
-
-            _lifeFlask1Throttle.Start();
-            _lifeFlask2Throttle.Start();
-            _lifeFlask3Throttle.Start();
-            _lifeFlask4Throttle.Start();
-            _lifeFlask5Throttle.Start();
-
-            _manaFlask1Throttle.Start();
-            _manaFlask2Throttle.Start();
-            _manaFlask3Throttle.Start();
-            _manaFlask4Throttle.Start();
-            _manaFlask5Throttle.Start();
+            _flask1Timer.Start();
+            _flask2Timer.Start();
+            _flask3Timer.Start();
+            _flask4Timer.Start();
+            _flask5Timer.Start();
 
             _skill1Timer.Start();
             _skill2Timer.Start();
@@ -129,9 +105,7 @@ namespace AutoFlask
             if (GameController.Area.CurrentArea == null || GameController.Area.CurrentArea.IsHideout || GameController.Area.CurrentArea.IsTown)
                 return base.Tick();
 
-            HandleLifeFlask();
-            HandleManaFlask();
-            HandleUtilityFlasks();
+            HandleFlasks();
             HandleSkills();
 
             return base.Tick();
@@ -164,112 +138,53 @@ namespace AutoFlask
             return false;
         }
 
-        private void HandleLifeFlask()
+        private void HandleFlasks()
         {
-            if (!Settings.IsLifeFlaskEnabled.Value) return;
+            if (!Settings.IsAutoFlasksGroupEnabled.Value) return;
 
             var life = GameController.Player.GetComponent<Life>();
             if (life == null) return;
 
             float hpPercent = (float)life.CurHP / life.MaxHP * 100;
-
-            if (Settings.IsLifeFlask1Enabled.Value && hpPercent <= Settings.LifeFlask1Percentage.Value)
-            {
-                if (!Settings.LifeFlask1CooldownEnable.Value || _lifeFlask1Throttle.ElapsedMilliseconds >= Settings.LifeFlask1Cooldown.Value)
-                {
-                    _lifeFlask1Throttle.Restart();
-                    SendKeyPress((byte)Settings.LifeFlask1Key.Value);
-                }
-            }
-
-            if (Settings.IsLifeFlask2Enabled.Value && hpPercent <= Settings.LifeFlask2Percentage.Value)
-            {
-                if (!Settings.LifeFlask2CooldownEnable.Value || _lifeFlask2Throttle.ElapsedMilliseconds >= Settings.LifeFlask2Cooldown.Value)
-                {
-                    _lifeFlask2Throttle.Restart();
-                    SendKeyPress((byte)Settings.LifeFlask2Key.Value);
-                }
-            }
-
-            if (Settings.IsLifeFlask3Enabled.Value && hpPercent <= Settings.LifeFlask3Percentage.Value)
-            {
-                if (!Settings.LifeFlask3CooldownEnable.Value || _lifeFlask3Throttle.ElapsedMilliseconds >= Settings.LifeFlask3Cooldown.Value)
-                {
-                    _lifeFlask3Throttle.Restart();
-                    SendKeyPress((byte)Settings.LifeFlask3Key.Value);
-                }
-            }
-
-            if (Settings.IsLifeFlask4Enabled.Value && hpPercent <= Settings.LifeFlask4Percentage.Value)
-            {
-                if (!Settings.LifeFlask4CooldownEnable.Value || _lifeFlask4Throttle.ElapsedMilliseconds >= Settings.LifeFlask4Cooldown.Value)
-                {
-                    _lifeFlask4Throttle.Restart();
-                    SendKeyPress((byte)Settings.LifeFlask4Key.Value);
-                }
-            }
-
-            if (Settings.IsLifeFlask5Enabled.Value && hpPercent <= Settings.LifeFlask5Percentage.Value)
-            {
-                if (!Settings.LifeFlask5CooldownEnable.Value || _lifeFlask5Throttle.ElapsedMilliseconds >= Settings.LifeFlask5Cooldown.Value)
-                {
-                    _lifeFlask5Throttle.Restart();
-                    SendKeyPress((byte)Settings.LifeFlask5Key.Value);
-                }
-            }
-        }
-
-        private void HandleManaFlask()
-        {
-            if (!Settings.IsManaFlaskEnabled.Value) return;
-
-            var life = GameController.Player.GetComponent<Life>();
-            if (life == null) return;
-
             float manaPercent = (float)life.CurMana / life.MaxMana * 100;
 
-            if (Settings.IsManaFlask1Enabled.Value && manaPercent <= Settings.ManaFlask1Percentage.Value)
+            ProcessFlask(0, Settings.IsFlask1Enabled.Value, Settings.Flask1Type.Value, Settings.Flask1HpPercentage.Value, Settings.Flask1ManaPercentage.Value, (byte)Settings.Flask1Key.Value, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer);
+            ProcessFlask(1, Settings.IsFlask2Enabled.Value, Settings.Flask2Type.Value, Settings.Flask2HpPercentage.Value, Settings.Flask2ManaPercentage.Value, (byte)Settings.Flask2Key.Value, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer);
+            ProcessFlask(2, Settings.IsFlask3Enabled.Value, Settings.Flask3Type.Value, Settings.Flask3HpPercentage.Value, Settings.Flask3ManaPercentage.Value, (byte)Settings.Flask3Key.Value, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer);
+            ProcessFlask(3, Settings.IsFlask4Enabled.Value, Settings.Flask4Type.Value, Settings.Flask4HpPercentage.Value, Settings.Flask4ManaPercentage.Value, (byte)Settings.Flask4Key.Value, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer);
+            ProcessFlask(4, Settings.IsFlask5Enabled.Value, Settings.Flask5Type.Value, Settings.Flask5HpPercentage.Value, Settings.Flask5ManaPercentage.Value, (byte)Settings.Flask5Key.Value, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer);
+        }
+
+        private void ProcessFlask(int slotIndex, bool isEnabled, string flaskType, int hpThreshold, int manaThreshold, byte key, bool cooldownEnable, int cooldownMs, bool useWhenAvailable, float currentHpPercent, float currentManaPercent, Stopwatch timer)
+        {
+            if (!isEnabled) return;
+
+            bool cooldownReady = !cooldownEnable || timer.ElapsedMilliseconds >= cooldownMs;
+            if (!cooldownReady) return;
+
+            if (flaskType == "HP")
             {
-                if (!Settings.ManaFlask1CooldownEnable.Value || _manaFlask1Throttle.ElapsedMilliseconds >= Settings.ManaFlask1Cooldown.Value)
+                if (currentHpPercent <= hpThreshold)
                 {
-                    _manaFlask1Throttle.Restart();
-                    SendKeyPress((byte)Settings.ManaFlask1Key.Value);
+                    timer.Restart();
+                    SendKeyPress(key);
                 }
             }
-
-            if (Settings.IsManaFlask2Enabled.Value && manaPercent <= Settings.ManaFlask2Percentage.Value)
+            else if (flaskType == "Mana")
             {
-                if (!Settings.ManaFlask2CooldownEnable.Value || _manaFlask2Throttle.ElapsedMilliseconds >= Settings.ManaFlask2Cooldown.Value)
+                if (currentManaPercent <= manaThreshold)
                 {
-                    _manaFlask2Throttle.Restart();
-                    SendKeyPress((byte)Settings.ManaFlask2Key.Value);
+                    timer.Restart();
+                    SendKeyPress(key);
                 }
             }
-
-            if (Settings.IsManaFlask3Enabled.Value && manaPercent <= Settings.ManaFlask3Percentage.Value)
+            else if (flaskType == "Utility")
             {
-                if (!Settings.ManaFlask3CooldownEnable.Value || _manaFlask3Throttle.ElapsedMilliseconds >= Settings.ManaFlask3Cooldown.Value)
+                bool availabilityReady = !useWhenAvailable || IsUtilityFlaskAvailable(slotIndex);
+                if (availabilityReady)
                 {
-                    _manaFlask3Throttle.Restart();
-                    SendKeyPress((byte)Settings.ManaFlask3Key.Value);
-                }
-            }
-
-            if (Settings.IsManaFlask4Enabled.Value && manaPercent <= Settings.ManaFlask4Percentage.Value)
-            {
-                if (!Settings.ManaFlask4CooldownEnable.Value || _manaFlask4Throttle.ElapsedMilliseconds >= Settings.ManaFlask4Cooldown.Value)
-                {
-                    _manaFlask4Throttle.Restart();
-                    SendKeyPress((byte)Settings.ManaFlask4Key.Value);
-                }
-            }
-
-            if (Settings.IsManaFlask5Enabled.Value && manaPercent <= Settings.ManaFlask5Percentage.Value)
-            {
-                if (!Settings.ManaFlask5CooldownEnable.Value || _manaFlask5Throttle.ElapsedMilliseconds >= Settings.ManaFlask5Cooldown.Value)
-                {
-                    _manaFlask5Throttle.Restart();
-                    SendKeyPress((byte)Settings.ManaFlask5Key.Value);
+                    timer.Restart();
+                    SendKeyPress(key);
                 }
             }
         }
@@ -327,86 +242,6 @@ namespace AutoFlask
                 DebugWindow.LogError($"[AutoFlask] Error checking flask {index + 1} availability: {ex.Message}");
             }
             return true;
-        }
-
-        private void HandleUtilityFlasks()
-        {
-            if (!Settings.IsUltilityFlaskEnabled.Value) return;
-
-            // Utility Flask 1
-            if (Settings.IsUtilityFlask1Enabled.Value)
-            {
-                bool cooldownReady = !Settings.UtilityFlask1CooldownEnable.Value || 
-                                     _utilityFlask1Timer.ElapsedMilliseconds >= Settings.UtilityFlask1Cooldown.Value;
-                bool availabilityReady = !Settings.UtilityFlask1UseWhenAvailable.Value || 
-                                         IsUtilityFlaskAvailable(0);
-
-                if (cooldownReady && availabilityReady)
-                {
-                    _utilityFlask1Timer.Restart();
-                    SendKeyPress((byte)Settings.UtilityFlask1Key.Value);
-                }
-            }
-
-            // Utility Flask 2
-            if (Settings.IsUtilityFlask2Enabled.Value)
-            {
-                bool cooldownReady = !Settings.UtilityFlask2CooldownEnable.Value || 
-                                     _utilityFlask2Timer.ElapsedMilliseconds >= Settings.UtilityFlask2Cooldown.Value;
-                bool availabilityReady = !Settings.UtilityFlask2UseWhenAvailable.Value || 
-                                         IsUtilityFlaskAvailable(1);
-
-                if (cooldownReady && availabilityReady)
-                {
-                    _utilityFlask2Timer.Restart();
-                    SendKeyPress((byte)Settings.UtilityFlask2Key.Value);
-                }
-            }
-
-            // Utility Flask 3
-            if (Settings.IsUtilityFlask3Enabled.Value)
-            {
-                bool cooldownReady = !Settings.UtilityFlask3CooldownEnable.Value || 
-                                     _utilityFlask3Timer.ElapsedMilliseconds >= Settings.UtilityFlask3Cooldown.Value;
-                bool availabilityReady = !Settings.UtilityFlask3UseWhenAvailable.Value || 
-                                         IsUtilityFlaskAvailable(2);
-
-                if (cooldownReady && availabilityReady)
-                {
-                    _utilityFlask3Timer.Restart();
-                    SendKeyPress((byte)Settings.UtilityFlask3Key.Value);
-                }
-            }
-
-            // Utility Flask 4
-            if (Settings.IsUtilityFlask4Enabled.Value)
-            {
-                bool cooldownReady = !Settings.UtilityFlask4CooldownEnable.Value || 
-                                     _utilityFlask4Timer.ElapsedMilliseconds >= Settings.UtilityFlask4Cooldown.Value;
-                bool availabilityReady = !Settings.UtilityFlask4UseWhenAvailable.Value || 
-                                         IsUtilityFlaskAvailable(3);
-
-                if (cooldownReady && availabilityReady)
-                {
-                    _utilityFlask4Timer.Restart();
-                    SendKeyPress((byte)Settings.UtilityFlask4Key.Value);
-                }
-            }
-
-            // Utility Flask 5
-            if (Settings.IsUtilityFlask5Enabled.Value)
-            {
-                bool cooldownReady = !Settings.UtilityFlask5CooldownEnable.Value || 
-                                     _utilityFlask5Timer.ElapsedMilliseconds >= Settings.UtilityFlask5Cooldown.Value;
-                bool availabilityReady = !Settings.UtilityFlask5UseWhenAvailable.Value || 
-                                         IsUtilityFlaskAvailable(4);
-
-                if (cooldownReady && availabilityReady)
-                {
-                    _utilityFlask5Timer.Restart();
-                    SendKeyPress((byte)Settings.UtilityFlask5Key.Value);
-                }
-            }
         }
 
         private void HandleSkills()
@@ -501,7 +336,7 @@ namespace AutoFlask
             }
             string skillCdStr = skillCooldowns.Count > 0 ? string.Join(" | ", skillCooldowns) : "None";
 
-            var drawPos = new Vector2(30, 170);
+            var drawPos = new Vector2(Settings.HudPositionX.Value, Settings.HudPositionY.Value);
 
             // Line 1: Auto
             Graphics.DrawText("Auto [ON]", drawPos, Color.Cyan);

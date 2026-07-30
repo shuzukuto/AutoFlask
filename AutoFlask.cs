@@ -148,14 +148,14 @@ namespace AutoFlask
             float hpPercent = (float)life.CurHP / life.MaxHP * 100;
             float manaPercent = (float)life.CurMana / life.MaxMana * 100;
 
-            ProcessFlask(0, Settings.IsFlask1Enabled.Value, Settings.Flask1Type.Value, Settings.Flask1HpPercentage.Value, Settings.Flask1ManaPercentage.Value, (byte)Settings.Flask1Key.Value, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer);
-            ProcessFlask(1, Settings.IsFlask2Enabled.Value, Settings.Flask2Type.Value, Settings.Flask2HpPercentage.Value, Settings.Flask2ManaPercentage.Value, (byte)Settings.Flask2Key.Value, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer);
-            ProcessFlask(2, Settings.IsFlask3Enabled.Value, Settings.Flask3Type.Value, Settings.Flask3HpPercentage.Value, Settings.Flask3ManaPercentage.Value, (byte)Settings.Flask3Key.Value, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer);
-            ProcessFlask(3, Settings.IsFlask4Enabled.Value, Settings.Flask4Type.Value, Settings.Flask4HpPercentage.Value, Settings.Flask4ManaPercentage.Value, (byte)Settings.Flask4Key.Value, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer);
-            ProcessFlask(4, Settings.IsFlask5Enabled.Value, Settings.Flask5Type.Value, Settings.Flask5HpPercentage.Value, Settings.Flask5ManaPercentage.Value, (byte)Settings.Flask5Key.Value, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer);
+            ProcessFlask(0, Settings.IsFlask1Enabled.Value, Settings.Flask1Type.Value, Settings.Flask1Percentage.Value, (byte)Settings.Flask1Key.Value, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer);
+            ProcessFlask(1, Settings.IsFlask2Enabled.Value, Settings.Flask2Type.Value, Settings.Flask2Percentage.Value, (byte)Settings.Flask2Key.Value, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer);
+            ProcessFlask(2, Settings.IsFlask3Enabled.Value, Settings.Flask3Type.Value, Settings.Flask3Percentage.Value, (byte)Settings.Flask3Key.Value, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer);
+            ProcessFlask(3, Settings.IsFlask4Enabled.Value, Settings.Flask4Type.Value, Settings.Flask4Percentage.Value, (byte)Settings.Flask4Key.Value, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer);
+            ProcessFlask(4, Settings.IsFlask5Enabled.Value, Settings.Flask5Type.Value, Settings.Flask5Percentage.Value, (byte)Settings.Flask5Key.Value, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer);
         }
 
-        private void ProcessFlask(int slotIndex, bool isEnabled, string flaskType, int hpThreshold, int manaThreshold, byte key, bool cooldownEnable, int cooldownMs, bool useWhenAvailable, float currentHpPercent, float currentManaPercent, Stopwatch timer)
+        private void ProcessFlask(int slotIndex, bool isEnabled, string flaskType, int thresholdPercent, byte key, bool cooldownEnable, int cooldownMs, bool useWhenAvailable, float currentHpPercent, float currentManaPercent, Stopwatch timer)
         {
             if (!isEnabled) return;
 
@@ -164,7 +164,7 @@ namespace AutoFlask
 
             if (flaskType == "HP")
             {
-                if (currentHpPercent <= hpThreshold)
+                if (currentHpPercent <= thresholdPercent)
                 {
                     timer.Restart();
                     SendKeyPress(key);
@@ -172,7 +172,7 @@ namespace AutoFlask
             }
             else if (flaskType == "Mana")
             {
-                if (currentManaPercent <= manaThreshold)
+                if (currentManaPercent <= thresholdPercent)
                 {
                     timer.Restart();
                     SendKeyPress(key);

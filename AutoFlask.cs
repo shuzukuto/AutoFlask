@@ -206,7 +206,7 @@ namespace AutoFlask
             return false;
         }
 
-        private ActorSkill FindActorSkill(Keys key)
+        private ActorSkill FindActorSkill(Keys key, bool preferVaal = false)
         {
             var actor = GameController.Player?.GetComponent<Actor>();
             if (actor == null) return null;
@@ -221,21 +221,120 @@ namespace AutoFlask
                 _ => -1
             };
 
+            var allSkills = actor.ActorSkills;
+            if (allSkills == null) return null;
+
             if (targetSlot >= 0)
             {
-                var skillBySlot = actor.ActorSkills.FirstOrDefault(s => s.SkillSlotIndex == targetSlot);
-                if (skillBySlot != null) return skillBySlot;
+                var slotSkills = allSkills.Where(s => s.SkillSlotIndex == targetSlot).ToList();
+                if (preferVaal)
+                {
+                    var vaalInSlot = slotSkills.FirstOrDefault(s => s.IsVaalSkill || (s.Name != null && s.Name.StartsWith("Vaal ")));
+                    if (vaalInSlot != null) return vaalInSlot;
+
+                    var baseInSlot = slotSkills.FirstOrDefault();
+                    if (baseInSlot != null && !string.IsNullOrEmpty(baseInSlot.Name))
+                    {
+                        var vaalMatch = allSkills.FirstOrDefault(s =>
+                            (s.IsVaalSkill || (s.Name != null && s.Name.StartsWith("Vaal "))) &&
+                            (s.Name.Contains(baseInSlot.Name, StringComparison.OrdinalIgnoreCase) ||
+                             (baseInSlot.InternalName != null && s.InternalName != null && s.InternalName.Contains(baseInSlot.InternalName, StringComparison.OrdinalIgnoreCase))));
+                        if (vaalMatch != null) return vaalMatch;
+                    }
+
+                    var vaalOnBar = allSkills.FirstOrDefault(s => (s.IsVaalSkill || (s.Name != null && s.Name.StartsWith("Vaal "))) && s.IsOnSkillBar);
+                    if (vaalOnBar != null) return vaalOnBar;
+
+                    var anyVaal = allSkills.FirstOrDefault(s => s.IsVaalSkill || (s.Name != null && s.Name.StartsWith("Vaal ")));
+                    if (anyVaal != null) return anyVaal;
+                }
+                else
+                {
+                    if (slotSkills.Count > 0)
+                    {
+                        var regularInSlot = slotSkills.FirstOrDefault(s => !s.IsVaalSkill && !(s.Name != null && s.Name.StartsWith("Vaal ")));
+                        return regularInSlot ?? slotSkills[0];
+                    }
+                }
+            }
+
+            if (preferVaal)
+            {
+                return allSkills.FirstOrDefault(s => s.IsVaalSkill || (s.Name != null && s.Name.StartsWith("Vaal ")));
             }
 
             return null;
         }
 
-        private bool IsSkillReady(Keys key, Stopwatch timer, int cooldownMs, bool useWhenAvailable, out string status)
+        private ActorVaalSkill FindVaalSkill(Actor actor, ActorSkill skill)
         {
-            var actorSkill = FindActorSkill(key);
+            if (actor == null || skill == null) return null;
+            var vaalSkills = actor.ActorVaalSkills;
+            if (vaalSkills == null || vaalSkills.Count == 0) return null;
+
+            return vaalSkills.FirstOrDefault(v =>
+                (!string.IsNullOrEmpty(v.VaalSkillInternalName) && !string.IsNullOrEmpty(skill.InternalName) &&
+                 (v.VaalSkillInternalName.Equals(skill.InternalName, StringComparison.OrdinalIgnoreCase) ||
+                  skill.InternalName.Contains(v.VaalSkillInternalName, StringComparison.OrdinalIgnoreCase))) ||
+                (!string.IsNullOrEmpty(v.VaalSkillDisplayName) && !string.IsNullOrEmpty(skill.Name) &&
+                 v.VaalSkillDisplayName.Equals(skill.Name, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(v.VaalSkillSkillName) && !string.IsNullOrEmpty(skill.Name) &&
+                 (skill.Name.Contains(v.VaalSkillSkillName, StringComparison.OrdinalIgnoreCase) ||
+                  v.VaalSkillSkillName.Contains(skill.Name, StringComparison.OrdinalIgnoreCase))));
+        }
+
+        private bool IsSkillReady(Keys key, Stopwatch timer, int cooldownMs, bool isVaalMode, bool useWhenAvailable, out string status)
+        {
+            var actor = GameController.Player?.GetComponent<Actor>();
+            var actorSkill = FindActorSkill(key, isVaalMode);
 
             if (actorSkill != null)
             {
+                bool isVaalSkill = isVaalMode || actorSkill.IsVaalSkill || (actorSkill.Name != null && actorSkill.Name.StartsWith("Vaal "));
+
+                if (isVaalSkill)
+                {
+                    var vaalSkill = FindVaalSkill(actor, actorSkill);
+                    int currSouls = vaalSkill?.CurrVaalSouls ?? 0;
+                    int soulsPerUse = actorSkill.SoulsPerUse > 0 ? actorSkill.SoulsPerUse : (vaalSkill?.VaalMaxSouls ?? 0);
+
+                    bool hasSouls = actorSkill.HasEnoughSouls || (soulsPerUse > 0 && currSouls >= soulsPerUse);
+
+                    if (!hasSouls)
+                    {
+                        status = soulsPerUse > 0 ? $"Souls ({currSouls}/{soulsPerUse})" : "Need Souls";
+                        return false;
+                    }
+
+                    if (!actorSkill.CanBeUsed)
+                    {
+                        status = soulsPerUse > 0 ? $"Soul Prevention ({currSouls}/{soulsPerUse})" : "Soul Prevention";
+                        return false;
+                    }
+
+                    if (timer.ElapsedMilliseconds < 500)
+                    {
+                        status = "Casting...";
+                        return false;
+                    }
+
+                    if (useWhenAvailable)
+                    {
+                        status = soulsPerUse > 0 ? $"Ready ({currSouls}/{soulsPerUse})" : $"Ready ({actorSkill.Name})";
+                        return true;
+                    }
+
+                    if (timer.ElapsedMilliseconds < cooldownMs)
+                    {
+                        long rem = cooldownMs - timer.ElapsedMilliseconds;
+                        status = $"Cooldown ({(rem / 1000f):F1}s)";
+                        return false;
+                    }
+
+                    status = soulsPerUse > 0 ? $"Ready ({currSouls}/{soulsPerUse})" : $"Ready ({actorSkill.Name})";
+                    return true;
+                }
+
                 if (actorSkill.IsOnCooldown)
                 {
                     status = "On Cooldown";
@@ -282,6 +381,7 @@ namespace AutoFlask
             bool isEnabled,
             Keys key,
             int cooldownMs,
+            bool isVaalSkill,
             bool useWhenAvailable,
             bool tracingEnabled,
             int tracingRange,
@@ -289,7 +389,7 @@ namespace AutoFlask
         {
             if (!isEnabled || key == Keys.None) return;
 
-            bool isReady = IsSkillReady(key, timer, cooldownMs, useWhenAvailable, out _);
+            bool isReady = IsSkillReady(key, timer, cooldownMs, isVaalSkill, useWhenAvailable, out _);
             if (!isReady) return;
 
             bool canCast = !tracingEnabled || TraceMonster(tracingRange);
@@ -314,6 +414,7 @@ namespace AutoFlask
                 Settings.Skill1Enabled.Value,
                 Settings.Skill1Key.Value.Key,
                 Settings.Skill1Cooldown.Value,
+                Settings.Skill1IsVaalSkill.Value,
                 Settings.Skill1UseWhenAvailable.Value,
                 Settings.Skill1TracingEnabled.Value,
                 Settings.Skill1TracingRange.Value,
@@ -324,6 +425,7 @@ namespace AutoFlask
                 Settings.Skill2Enabled.Value,
                 Settings.Skill2Key.Value.Key,
                 Settings.Skill2Cooldown.Value,
+                Settings.Skill2IsVaalSkill.Value,
                 Settings.Skill2UseWhenAvailable.Value,
                 Settings.Skill2TracingEnabled.Value,
                 Settings.Skill2TracingRange.Value,
@@ -334,6 +436,7 @@ namespace AutoFlask
                 Settings.Skill3Enabled.Value,
                 Settings.Skill3Key.Value.Key,
                 Settings.Skill3Cooldown.Value,
+                Settings.Skill3IsVaalSkill.Value,
                 Settings.Skill3UseWhenAvailable.Value,
                 Settings.Skill3TracingEnabled.Value,
                 Settings.Skill3TracingRange.Value,
@@ -596,11 +699,26 @@ namespace AutoFlask
                         _ => _skill3Timer
                     };
 
-                    bool isReady = IsSkillReady(key, timer, cd, avail, out string status);
+                    bool isVaal = i switch
+                    {
+                        0 => Settings.Skill1IsVaalSkill.Value,
+                        1 => Settings.Skill2IsVaalSkill.Value,
+                        _ => Settings.Skill3IsVaalSkill.Value
+                    };
+
+                    bool isReady = IsSkillReady(key, timer, cd, isVaal, avail, out string status);
                     string tag;
                     if (isReady)
                     {
                         tag = "RDY";
+                    }
+                    else if (status.StartsWith("Souls ("))
+                    {
+                        tag = status.Replace("Souls (", "").Replace(")", "");
+                    }
+                    else if (status.StartsWith("Soul Prevention"))
+                    {
+                        tag = "Prev";
                     }
                     else if (status.StartsWith("Cooldown ("))
                     {
@@ -726,7 +844,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.2.0");
+            ImGui.TextDisabled("v1.2.1");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -955,14 +1073,15 @@ namespace AutoFlask
             ImGui.TextDisabled("Skills will not cast if current Mana is below this value.");
             ImGui.Separator();
 
-            DrawSingleSkillCard(1, Settings.Skill1Enabled, Settings.Skill1Key, Settings.Skill1Cooldown, Settings.Skill1UseWhenAvailable, Settings.Skill1TracingEnabled, Settings.Skill1TracingRange, _skill1Timer);
-            DrawSingleSkillCard(2, Settings.Skill2Enabled, Settings.Skill2Key, Settings.Skill2Cooldown, Settings.Skill2UseWhenAvailable, Settings.Skill2TracingEnabled, Settings.Skill2TracingRange, _skill2Timer);
-            DrawSingleSkillCard(3, Settings.Skill3Enabled, Settings.Skill3Key, Settings.Skill3Cooldown, Settings.Skill3UseWhenAvailable, Settings.Skill3TracingEnabled, Settings.Skill3TracingRange, _skill3Timer);
+            DrawSingleSkillCard(1, Settings.Skill1Enabled, Settings.Skill1IsVaalSkill, Settings.Skill1Key, Settings.Skill1Cooldown, Settings.Skill1UseWhenAvailable, Settings.Skill1TracingEnabled, Settings.Skill1TracingRange, _skill1Timer);
+            DrawSingleSkillCard(2, Settings.Skill2Enabled, Settings.Skill2IsVaalSkill, Settings.Skill2Key, Settings.Skill2Cooldown, Settings.Skill2UseWhenAvailable, Settings.Skill2TracingEnabled, Settings.Skill2TracingRange, _skill2Timer);
+            DrawSingleSkillCard(3, Settings.Skill3Enabled, Settings.Skill3IsVaalSkill, Settings.Skill3Key, Settings.Skill3Cooldown, Settings.Skill3UseWhenAvailable, Settings.Skill3TracingEnabled, Settings.Skill3TracingRange, _skill3Timer);
         }
 
         private void DrawSingleSkillCard(
             int skillIndex,
             ToggleNode enabledNode,
+            ToggleNode isVaalNode,
             HotkeyNodeV2 keyNode,
             RangeNode<int> cdNode,
             ToggleNode useWhenAvailableNode,
@@ -972,11 +1091,19 @@ namespace AutoFlask
         {
             ImGui.PushID($"SkillCard_{skillIndex}");
 
-            bool isReady = IsSkillReady(keyNode.Value.Key, timer, cdNode.Value, useWhenAvailableNode.Value, out string liveStatus);
-            var detectedSkill = FindActorSkill(keyNode.Value.Key);
+            bool isVaal = isVaalNode.Value;
+            var detectedSkill = FindActorSkill(keyNode.Value.Key, isVaal);
+            bool autoDetectedVaal = detectedSkill != null && (detectedSkill.IsVaalSkill || (detectedSkill.Name != null && detectedSkill.Name.StartsWith("Vaal ")));
+            bool effectiveVaal = isVaal || autoDetectedVaal;
+
+            bool isReady = IsSkillReady(keyNode.Value.Key, timer, cdNode.Value, effectiveVaal, useWhenAvailableNode.Value, out string liveStatus);
+
+            var actor = GameController.Player?.GetComponent<Actor>();
+            var vaalSkillObj = effectiveVaal && detectedSkill != null ? FindVaalSkill(actor, detectedSkill) : null;
 
             string titleStatus = isReady ? "READY" : liveStatus;
-            bool open = ImGui.CollapsingHeader($"Skill [{skillIndex}] - Key: {keyNode.Value.Key} | Status: {titleStatus}", ImGuiTreeNodeFlags.DefaultOpen);
+            string vaalPrefix = effectiveVaal ? "[VAAL] " : "";
+            bool open = ImGui.CollapsingHeader($"{vaalPrefix}Skill [{skillIndex}] - Key: {keyNode.Value.Key} | Status: {titleStatus}", ImGuiTreeNodeFlags.DefaultOpen);
             if (open)
             {
                 bool enabled = enabledNode.Value;
@@ -986,6 +1113,8 @@ namespace AutoFlask
                 ImGui.Text("Status:");
                 ImGui.SameLine();
                 var statusColor = isReady ? new Vector4(0.2f, 1f, 0.4f, 1f) :
+                                  liveStatus.StartsWith("Souls") ? new Vector4(0.9f, 0.4f, 1f, 1f) :
+                                  liveStatus.StartsWith("Soul Prevention") ? new Vector4(1f, 0.8f, 0.2f, 1f) :
                                   liveStatus.StartsWith("On Cooldown") ? new Vector4(1f, 0.7f, 0.2f, 1f) :
                                   new Vector4(0.7f, 0.7f, 0.7f, 1f);
                 ImGui.TextColored(statusColor, liveStatus);
@@ -1004,22 +1133,58 @@ namespace AutoFlask
 
                 DrawKeySelector("Cast Key", keyNode);
 
+                bool vaalChecked = isVaalNode.Value;
+                if (ImGui.Checkbox("Is Vaal Skill (Phụ thuộc Soul, không hồi chiêu thường)", ref vaalChecked))
+                {
+                    isVaalNode.Value = vaalChecked;
+                }
+                if (autoDetectedVaal && !vaalChecked)
+                {
+                    ImGui.SameLine();
+                    ImGui.TextColored(new Vector4(0.8f, 0.5f, 1f, 1f), "[Tự động nhận diện Vaal Skill]");
+                }
+
+                if (effectiveVaal)
+                {
+                    int currSouls = vaalSkillObj?.CurrVaalSouls ?? 0;
+                    int maxSouls = vaalSkillObj?.VaalMaxSouls ?? 0;
+                    int soulsPerUse = (detectedSkill != null && detectedSkill.SoulsPerUse > 0) ? detectedSkill.SoulsPerUse : maxSouls;
+
+                    float progress = soulsPerUse > 0 ? Math.Min(1f, (float)currSouls / soulsPerUse) : 0f;
+                    string soulsOverlay = soulsPerUse > 0 ? $"{currSouls} / {soulsPerUse} Souls (Max: {maxSouls})" : $"{currSouls} Souls";
+                    ImGui.ProgressBar(progress, new Vector2(-1, 0), soulsOverlay);
+
+                    ImGui.TextDisabled("Vaal Skill phụ thuộc Souls thay vì thời gian hồi chiêu. Khi đủ Souls và không bị Soul Prevention sẽ sẵn sàng kích hoạt.");
+                }
+
                 bool useWhenAvail = useWhenAvailableNode.Value;
-                if (ImGui.Checkbox("Use When Available (Tự động dùng khi skill hồi chiêu)", ref useWhenAvail))
+                string useAvailLabel = effectiveVaal ? "Use When Available (Tự động dùng ngay khi đủ Souls)" : "Use When Available (Tự động dùng khi skill hồi chiêu)";
+                if (ImGui.Checkbox(useAvailLabel, ref useWhenAvail))
                 {
                     useWhenAvailableNode.Value = useWhenAvail;
                 }
-                ImGui.TextDisabled("Tự động tung chiêu ngay khi kỹ năng vừa hết thời gian hồi (Off Cooldown) trong game.");
+                if (effectiveVaal)
+                {
+                    ImGui.TextDisabled("Tự động tung chiêu ngay khi tích lũy đủ Souls và không trong trạng thái Soul Gain Prevention.");
+                }
+                else
+                {
+                    ImGui.TextDisabled("Tự động tung chiêu ngay khi kỹ năng vừa hết thời gian hồi (Off Cooldown) trong game.");
+                }
 
-                int cd = cdNode.Value;
-                if (ImGui.SliderInt("Cooldown (ms)", ref cd, 100, 30000)) cdNode.Value = cd;
+                if (!effectiveVaal || !useWhenAvailableNode.Value)
+                {
+                    int cd = cdNode.Value;
+                    string cdLabel = effectiveVaal ? "Min Interval / Cooldown Throttling (ms)" : "Cooldown (ms)";
+                    if (ImGui.SliderInt(cdLabel, ref cd, 100, 30000)) cdNode.Value = cd;
 
-                ImGui.SameLine();
-                if (ImGui.Button("2s")) cdNode.Value = 2000;
-                ImGui.SameLine();
-                if (ImGui.Button("5s")) cdNode.Value = 5000;
-                ImGui.SameLine();
-                if (ImGui.Button("10s")) cdNode.Value = 10000;
+                    ImGui.SameLine();
+                    if (ImGui.Button("2s")) cdNode.Value = 2000;
+                    ImGui.SameLine();
+                    if (ImGui.Button("5s")) cdNode.Value = 5000;
+                    ImGui.SameLine();
+                    if (ImGui.Button("10s")) cdNode.Value = 10000;
+                }
 
                 bool tracing = tracingNode.Value;
                 if (ImGui.Checkbox("Auto-Aim (Monster Tracing)", ref tracing)) tracingNode.Value = tracing;

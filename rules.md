@@ -22,9 +22,16 @@ Tài liệu đặc tả kiến trúc và tiêu chuẩn thiết kế còn hiệu 
 - Tiêu chí ưu tiên: Quái vật còn sống, thù địch, có thể target được, độ hiếm cao nhất (`Rarity`), sau đó đến khoảng cách gần người chơi nhất.
 - Chuyển đổi tọa độ qua `Camera.WorldToScreen(PosNum)` sử dụng `System.Numerics.Vector3` và `System.Numerics.Vector2`.
 
-### 1.4. Cơ chế Kỹ năng Tự động & Use When Available
-- Tự động ánh xạ phím gán (`Keys.Q`, `W`, `E`, `R`, `T`) tới chỉ số ô kỹ năng (`SkillSlotIndex`) trong `Actor.ActorSkills`.
-- Khi bật `UseWhenAvailable`: Kiểm tra trạng thái hồi chiêu thực tế trong game (`!actorSkill.IsOnCooldown && actorSkill.CanBeUsed`) để tự động tung chiêu ngay khi hồi xong, đồng thời duy trì bộ đếm dự phòng an toàn.
+### 1.4. Cơ chế Kỹ năng Tự động, Vaal Skills & Use When Available
+- **Kỹ năng thông thường (Regular Skills)**:
+  - Tự động ánh xạ phím gán (`Keys.Q`, `W`, `E`, `R`, `T`) tới chỉ số ô kỹ năng (`SkillSlotIndex`) trong `Actor.ActorSkills`.
+  - Khi bật `UseWhenAvailable`: Kiểm tra trạng thái hồi chiêu thực tế trong game (`!actorSkill.IsOnCooldown && actorSkill.CanBeUsed`) để tự động tung chiêu ngay khi hồi xong, đồng thời duy trì bộ đếm dự phòng an toàn.
+- **Kỹ năng Vaal (Vaal Skills)**:
+  - Tự động nhận diện qua cờ `ActorSkill.IsVaalSkill`, tiền tố tên `"Vaal "`, hoặc tùy chọn `IsVaalSkill` trong cài đặt.
+  - Phụ thuộc tích lũy Souls (`CurrVaalSouls` từ `Actor.ActorVaalSkills` so với `SoulsPerUse` / `VaalMaxSouls` hoặc `ActorSkill.HasEnoughSouls`) thay vì thời gian hồi chiêu (`Cooldown`).
+  - Bỏ qua ràng buộc cooldown thông thường; kiểm tra `ActorSkill.CanBeUsed` để tôn trọng trạng thái `Soul Gain Prevention` (ngăn tích và dùng soul tạm thời sau khi cast) và debuff.
+  - Khi bật `UseWhenAvailable`: Tự động thi triển ngay khi tích đủ Souls và không bị Soul Gain Prevention.
+  - Hiển thị thanh tiến trình Souls động trên giao diện ImGui (`CurrSouls / SoulsPerUse`) và rút gọn trên HUD (`S1: 15/30`, `S1: Prev`, `S1: RDY`).
 
 ---
 

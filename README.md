@@ -15,12 +15,15 @@ Plugin tự động sử dụng bình thuốc (Auto Flask) và hỗ trợ tung 3
 - **Chẩn đoán thời gian thực (Live Diagnostics)**: Hiển thị ngay trạng thái từng bình (`Ready`, `Buff Active`, `No Charges`, `Empty Slot`) trong giao diện cài đặt.
 - **Nút Test Trigger**: Cho phép bấm thử nghiệm trực tiếp từng bình trong UI.
 
-### 2. Tự động tung kỹ năng (Triple Skill Automation)
+### 2. Tự động tung kỹ năng (Triple Skill Automation & Vaal Skills)
 - Hỗ trợ tới 3 phím kỹ năng độc lập (Skill 1, Skill 2, Skill 3) như Blood Rage, Molten Shell, Enduring Cry, Curse, Totem, v.v.
-- **Tính năng "Use when available"**: Tự động phát hiện trạng thái hồi chiêu trong game thông qua `ActorSkill` và tự động tung kỹ năng ngay khi chiêu vừa hồi xong (Off Cooldown).
+- **Hỗ trợ toàn diện Kỹ năng Vaal (Vaal Skills)**: Tự động phát hiện và theo dõi linh hồn (`CurrVaalSouls` / `SoulsPerUse`) từ bộ nhớ game; không ép thời gian hồi chiêu thông thường; tôn trọng trạng thái `Soul Gain Prevention`. Có thanh đo Souls trực quan trong cài đặt.
+- **Tính năng "Use when available"**:
+  - Đối với kỹ năng thường: Tự động tung kỹ năng ngay khi chiêu vừa hồi xong (Off Cooldown) trong game.
+  - Đối với kỹ năng Vaal: Tự động tung chiêu ngay khi tích lũy đủ Souls và không bị Soul Gain Prevention.
 - **Tự động nhắm mục tiêu (Monster Tracing / Auto-Aim)**: Tự động di chuột và nhắm vào quái vật có độ hiếm cao nhất (Unique > Rare > Magic > Normal) trong phạm vi cho phép trước khi xuất chiêu.
 - **Mana Safety Gate**: Không tung chiêu nếu lượng Mana hiện tại thấp hơn ngưỡng an toàn.
-- **Chẩn đoán kỹ năng thời gian thực**: Tự động nhận diện tên kỹ năng PoE theo khe phím (`Q`, `W`, `E`, `R`, `T`) và hiển thị trạng thái `Ready`, `On Cooldown` trực tiếp trong UI.
+- **Chẩn đoán kỹ năng thời gian thực**: Tự động nhận diện tên kỹ năng PoE theo khe phím (`Q`, `W`, `E`, `R`, `T`) và hiển thị trạng thái `Ready`, `On Cooldown`, `Souls (X/Y)`, `Soul Prevention` trực tiếp trong UI.
 - **Nút Test Cast**: Bấm thử kỹ năng ngay trong giao diện cài đặt.
 
 ### 3. Giao diện HUD On-Screen hiện đại

@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.1] - 2026-11-16 16:21:00
+
+### User Request
+> bot không nhận diện được Vaal Skill. Vaal Skill không có thời gian hồi chiêu mà phụ thuộc Soul.
+
+### Added
+- Hỗ trợ toàn diện nhận diện và cơ chế vận hành cho Kỹ năng Vaal (Vaal Skills): Tự động phát hiện qua `ActorSkill.IsVaalSkill`, tiền tố `"Vaal "`, hoặc tùy chọn `Is Vaal Skill (Phụ thuộc Soul)` (`Skill1IsVaalSkill`, `Skill2IsVaalSkill`, `Skill3IsVaalSkill`).
+- Tích hợp trích xuất và giám sát số lượng linh hồn thời gian thực từ `Actor.ActorVaalSkills` (`CurrVaalSouls`, `SoulsPerUse`, `VaalMaxSouls`, `HasEnoughSouls`).
+- Thanh đo tiến trình tích lũy Souls (Souls Progress Bar) trực quan trên giao diện cài đặt ImGui.
+- Chẩn đoán trạng thái đặc thù của kỹ năng Vaal: `Souls (X/Y)` khi chưa đủ linh hồn, `Soul Prevention` khi kỹ năng đang trong thời gian hồi tích hồn sau khi sử dụng, và `Ready (X/Y)` khi đã đủ điều kiện kích hoạt.
+- Tối ưu tính năng "Use When Available" cho Vaal Skill: Tự động xuất chiêu ngay khi đủ Souls và thoát khỏi Soul Gain Prevention mà không bị chặn bởi bộ đếm Cooldown thông thường.
+
+### Changed
+- Cải tiến hàm `FindActorSkill`: Khi bật hoặc phát hiện Vaal Skill, tự động ưu tiên lọc phiên bản Vaal trong slot phím hoặc tìm kiếm kỹ năng Vaal liên kết với gem kỹ năng thông thường.
+- Cập nhật hiển thị HUD On-Screen: Hiển thị ngắn gọn thông tin linh hồn `S1: X/Y`, ngăn tích hồn `S1: Prev`, hoặc sẵn sàng `S1: RDY`.
+- Xử lý triệt để cảnh báo `ActorVaalSkill.VaalSoulsPerUse` obsolete, đưa toàn bộ dự án về chuẩn biên dịch `0 Warning(s), 0 Error(s)`.
+- Nâng cấp phiên bản SemVer từ `v1.2.0` lên `v1.2.1`.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlaskSettings.cs
+- rules.md
+- changelog.md
+
 ## [v1.2.0] - 2026-11-16 15:58:56
 
 ### User Request

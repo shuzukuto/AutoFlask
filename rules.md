@@ -40,9 +40,11 @@ Tài liệu đặc tả kiến trúc và tiêu chuẩn thiết kế còn hiệu 
 ### 2.1. Phân cấp Tab Bar (ImGui Tabs)
 Giao diện cài đặt phải được tổ chức thành 5 Tab rõ ràng:
 1. **🧪 Flasks (1-5)**:
-   - Header hiển thị trạng thái động của bình thuốc (`Ready`, `Buff Active`, `No Charges`, `Empty Slot`).
+   - Header hiển thị tên vật phẩm trang bị thực tế (`BaseName`), loại bình (`Auto`, `HP`, `Mana`, `Utility`) và trạng thái động (`Ready`, `Buff Active`, `No Charges`, `Empty Slot`).
    - Cung cấp nút `Test Trigger` kiểm tra phím bấm tức thì.
-   - Hỗ trợ 3 kiểu bình: HP (ngưỡng %), Mana (ngưỡng %), Utility (Use When Available).
+   - Hỗ trợ 4 chế độ: `Auto` (tự động nhận diện loại bình từ bộ nhớ game), `HP` (ngưỡng %), `Mana` (ngưỡng %), `Utility` (Use When Available).
+   - Nút `🔄 Tự động đồng bộ loại bình theo trang bị game` quét nhanh toàn bộ 5 slot và cấu hình chuẩn xác.
+   - Cảnh báo lệch loại giữa cấu hình và trang bị thực tế trong game kèm nút 1-click sửa nhanh.
 2. **⚔️ Skills (1-3)**:
    - Quản lý Cooldown độc lập cho từng chiêu thức kèm tùy chọn **Use When Available** (tự dùng ngay khi hồi chiêu trong game).
    - Tự động nhận diện tên kỹ năng PoE (`ActorSkill.Name`) và hiển thị trạng thái động.

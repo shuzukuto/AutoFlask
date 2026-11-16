@@ -58,7 +58,7 @@ namespace AutoFlask
             "Mouse4", "Mouse5"
         };
 
-        private static readonly string[] FlaskTypes = { "HP", "Mana", "Utility" };
+        private static readonly string[] FlaskTypes = { "Auto", "HP", "Mana", "Utility" };
 
         public override bool Initialise()
         {
@@ -73,6 +73,16 @@ namespace AutoFlask
             _skill1Timer.Start();
             _skill2Timer.Start();
             _skill3Timer.Start();
+
+            // Auto-migrate legacy inverted layout where slot 1 was Mana and slot 5 was HP
+            if (Settings.Flask1Type.Value == "Mana" && Settings.Flask5Type.Value == "HP")
+            {
+                Settings.Flask1Type.Value = "HP";
+                Settings.Flask1Percentage.Value = 45;
+                Settings.Flask1UseWhenAvailable.Value = false;
+                Settings.Flask5Type.Value = "Utility";
+                Settings.Flask5UseWhenAvailable.Value = true;
+            }
 
             // Register Master Toggle Hotkey
             Input.RegisterKey(Settings.ToggleAutoFlask.Value.Key);
@@ -445,6 +455,17 @@ namespace AutoFlask
         #endregion
 
         #region Flask Logic
+        private string ResolveFlaskType(int slotIndex, string configuredType)
+        {
+            if (configuredType == "Auto")
+            {
+                var detected = GetDetectedFlaskType(slotIndex, out _);
+                if (!string.IsNullOrEmpty(detected)) return detected;
+                return slotIndex == 0 ? "HP" : "Utility";
+            }
+            return configuredType;
+        }
+
         private void HandleFlasks()
         {
             if (!Settings.IsAutoFlasksGroupEnabled.Value) return;
@@ -455,11 +476,11 @@ namespace AutoFlask
             float hpPercent = (float)life.CurHP / life.MaxHP * 100f;
             float manaPercent = life.MaxMana > 0 ? (float)life.CurMana / life.MaxMana * 100f : 100f;
 
-            ProcessFlask(0, Settings.IsFlask1Enabled.Value, Settings.Flask1Type.Value, Settings.Flask1Percentage.Value, (byte)Settings.Flask1Key.Value.Key, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer);
-            ProcessFlask(1, Settings.IsFlask2Enabled.Value, Settings.Flask2Type.Value, Settings.Flask2Percentage.Value, (byte)Settings.Flask2Key.Value.Key, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer);
-            ProcessFlask(2, Settings.IsFlask3Enabled.Value, Settings.Flask3Type.Value, Settings.Flask3Percentage.Value, (byte)Settings.Flask3Key.Value.Key, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer);
-            ProcessFlask(3, Settings.IsFlask4Enabled.Value, Settings.Flask4Type.Value, Settings.Flask4Percentage.Value, (byte)Settings.Flask4Key.Value.Key, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer);
-            ProcessFlask(4, Settings.IsFlask5Enabled.Value, Settings.Flask5Type.Value, Settings.Flask5Percentage.Value, (byte)Settings.Flask5Key.Value.Key, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer);
+            ProcessFlask(0, Settings.IsFlask1Enabled.Value, ResolveFlaskType(0, Settings.Flask1Type.Value), Settings.Flask1Percentage.Value, (byte)Settings.Flask1Key.Value.Key, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer);
+            ProcessFlask(1, Settings.IsFlask2Enabled.Value, ResolveFlaskType(1, Settings.Flask2Type.Value), Settings.Flask2Percentage.Value, (byte)Settings.Flask2Key.Value.Key, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer);
+            ProcessFlask(2, Settings.IsFlask3Enabled.Value, ResolveFlaskType(2, Settings.Flask3Type.Value), Settings.Flask3Percentage.Value, (byte)Settings.Flask3Key.Value.Key, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer);
+            ProcessFlask(3, Settings.IsFlask4Enabled.Value, ResolveFlaskType(3, Settings.Flask4Type.Value), Settings.Flask4Percentage.Value, (byte)Settings.Flask4Key.Value.Key, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer);
+            ProcessFlask(4, Settings.IsFlask5Enabled.Value, ResolveFlaskType(4, Settings.Flask5Type.Value), Settings.Flask5Percentage.Value, (byte)Settings.Flask5Key.Value.Key, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer);
         }
 
         private void ProcessFlask(
@@ -534,6 +555,43 @@ namespace AutoFlask
             {
                 return Enumerable.Empty<string>();
             }
+        }
+
+        private string GetDetectedFlaskType(int index, out string flaskName)
+        {
+            flaskName = null;
+            try
+            {
+                var flaskInventory = GameController.IngameState?.ServerData?.PlayerInventories?.LastOrDefault(x => x.TypeId == InventoryNameE.Flask1);
+                if (flaskInventory?.Inventory == null) return null;
+
+                var flaskItem = flaskInventory.Inventory[index, 0];
+                if (flaskItem?.Address == 0 || flaskItem?.Item?.Address == 0) return null;
+
+                var item = flaskItem.Item;
+                if (!string.IsNullOrEmpty(item.Path))
+                {
+                    var baseType = GameController.Files?.BaseItemTypes?.Translate(item.Path);
+                    flaskName = baseType?.BaseName ?? item.Metadata;
+                }
+
+                if (item.TryGetComponent<Flask>(out var flask))
+                {
+                    int type = flask.M.Read<int>(flask.Address + 0x28, 0x10);
+                    return type switch
+                    {
+                        1 => "HP",
+                        2 => "Mana",
+                        3 => "Hybrid",
+                        4 => "Utility",
+                        _ => null
+                    };
+                }
+            }
+            catch
+            {
+            }
+            return null;
         }
 
         private bool IsUtilityFlaskAvailable(int index, out string status)
@@ -762,7 +820,7 @@ namespace AutoFlask
                     };
                     if (!enabled) continue;
 
-                    string type = i switch
+                    string rawType = i switch
                     {
                         0 => Settings.Flask1Type.Value,
                         1 => Settings.Flask2Type.Value,
@@ -770,6 +828,7 @@ namespace AutoFlask
                         3 => Settings.Flask4Type.Value,
                         _ => Settings.Flask5Type.Value
                     };
+                    string type = ResolveFlaskType(i, rawType);
 
                     Stopwatch timer = i switch
                     {
@@ -848,7 +907,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.2.2");
+            ImGui.TextDisabled("v1.2.3");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -916,11 +975,69 @@ namespace AutoFlask
             {
                 Settings.IsAutoFlasksGroupEnabled.Value = groupEnabled;
             }
+            ImGui.SameLine();
+            if (ImGui.Button("🔄 Tự động đồng bộ loại bình theo trang bị game"))
+            {
+                SyncAllFlasksFromInventory();
+            }
+            ImGui.TextDisabled("Mẹo: Bạn có thể chọn Type là 'Auto' để bot tự động nhận diện loại bình thực tế trong game (HP/Mana/Utility).");
             ImGui.Separator();
 
             for (int i = 0; i < 5; i++)
             {
                 DrawSingleFlaskCard(i);
+            }
+        }
+
+        private void SyncAllFlasksFromInventory()
+        {
+            for (int slot = 0; slot < 5; slot++)
+            {
+                string detected = GetDetectedFlaskType(slot, out _);
+                if (string.IsNullOrEmpty(detected)) continue;
+
+                ListNode typeNode = slot switch
+                {
+                    0 => Settings.Flask1Type,
+                    1 => Settings.Flask2Type,
+                    2 => Settings.Flask3Type,
+                    3 => Settings.Flask4Type,
+                    _ => Settings.Flask5Type
+                };
+
+                RangeNode<int> pctNode = slot switch
+                {
+                    0 => Settings.Flask1Percentage,
+                    1 => Settings.Flask2Percentage,
+                    2 => Settings.Flask3Percentage,
+                    3 => Settings.Flask4Percentage,
+                    _ => Settings.Flask5Percentage
+                };
+
+                ToggleNode availNode = slot switch
+                {
+                    0 => Settings.Flask1UseWhenAvailable,
+                    1 => Settings.Flask2UseWhenAvailable,
+                    2 => Settings.Flask3UseWhenAvailable,
+                    3 => Settings.Flask4UseWhenAvailable,
+                    _ => Settings.Flask5UseWhenAvailable
+                };
+
+                typeNode.Value = detected;
+                if (detected == "HP")
+                {
+                    pctNode.Value = 45;
+                    availNode.Value = false;
+                }
+                else if (detected == "Mana")
+                {
+                    pctNode.Value = 25;
+                    availNode.Value = false;
+                }
+                else if (detected == "Utility")
+                {
+                    availNode.Value = true;
+                }
             }
         }
 
@@ -989,12 +1106,17 @@ namespace AutoFlask
                 _ => Settings.Flask5UseWhenAvailable
             };
 
+            string detectedType = GetDetectedFlaskType(slot, out string detectedName);
+            string effectiveType = ResolveFlaskType(slot, typeNode.Value);
+
             // Diagnostic status
             IsUtilityFlaskAvailable(slot, out string liveStatus);
 
             ImGui.PushID($"FlaskSlot_{slot}");
 
-            bool headerOpen = ImGui.CollapsingHeader($"Flask [{slot + 1}] - ({typeNode.Value}) | Key: {keyNode.Value.Key}", ImGuiTreeNodeFlags.DefaultOpen);
+            string itemDesc = !string.IsNullOrEmpty(detectedName) ? $" | {detectedName}" : "";
+            string typeTag = typeNode.Value == "Auto" ? $"Auto ({effectiveType})" : typeNode.Value;
+            bool headerOpen = ImGui.CollapsingHeader($"Flask [{slot + 1}] - ({typeTag}){itemDesc} | Key: {keyNode.Value.Key}", ImGuiTreeNodeFlags.DefaultOpen);
             if (headerOpen)
             {
                 bool enabled = isEnabledNode.Value;
@@ -1015,6 +1137,21 @@ namespace AutoFlask
                     SendKeyPress((byte)keyNode.Value.Key);
                 }
 
+                if (!string.IsNullOrEmpty(detectedType))
+                {
+                    ImGui.TextDisabled($"Trang bị trong game: {detectedName ?? "Flask"} [{detectedType}]");
+                    if (typeNode.Value != "Auto" && typeNode.Value != detectedType)
+                    {
+                        ImGui.SameLine();
+                        ImGui.TextColored(new Vector4(1f, 0.4f, 0.2f, 1f), $"[⚠️ Lệch loại: Cấu hình là {typeNode.Value}]");
+                        ImGui.SameLine();
+                        if (ImGui.SmallButton($"Đồng bộ sang {detectedType}##sync_{slot}"))
+                        {
+                            typeNode.Value = detectedType;
+                        }
+                    }
+                }
+
                 // Key selector
                 DrawKeySelector("Key", keyNode);
 
@@ -1027,15 +1164,15 @@ namespace AutoFlask
                 }
 
                 // HP/Mana Threshold
-                if (typeNode.Value == "HP" || typeNode.Value == "Mana")
+                if (effectiveType == "HP" || effectiveType == "Mana" || effectiveType == "Hybrid")
                 {
                     int pct = pctNode.Value;
-                    if (ImGui.SliderInt($"Trigger Threshold ({typeNode.Value} %)", ref pct, 5, 100))
+                    if (ImGui.SliderInt($"Trigger Threshold ({effectiveType} %)", ref pct, 5, 100))
                     {
                         pctNode.Value = pct;
                     }
                 }
-                else if (typeNode.Value == "Utility")
+                else if (effectiveType == "Utility")
                 {
                     bool avail = availNode.Value;
                     if (ImGui.Checkbox("Use When Available (Auto re-drink when buff expires & charges ready)", ref avail))

@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.3] - 2026-11-16 16:40:00
+
+### User Request
+> kiểm tra lại cấu hình của các flask, có vẻ bot nhận nhầm flask ở slot 1 là mana do code cũ còn sót lại
+
+### Fixed
+- Khắc phục triệt để lỗi kế thừa file cấu hình cũ (`AutoFlask_settings.json`): Slot 1 bị lưu cứng giá trị `"Mana"` (ngưỡng 15%) và Slot 5 lưu `"HP"` (ngưỡng 60%) từ phiên bản đầu tiên của AutoFlask, khiến bot uống bình ô 1 khi tụt Mana thay vì Máu.
+- Tự động di chuyển (auto-migrate) và chuẩn hóa thiết lập khi khởi động plugin nếu phát hiện bố cục ngược cũ (Slot 1 Mana / Slot 5 HP).
+- Chuẩn hóa trực tiếp file cấu hình `AutoFlask_settings.json` đưa Slot 1 về đúng loại `HP` (ngưỡng 45%) và Slot 5 về `Utility`.
+
+### Added
+- Bổ sung cơ chế tự động nhận diện bình thuốc thông minh từ bộ nhớ game (`GetDetectedFlaskType`): Đọc trực tiếp loại bình (1: HP, 2: Mana, 3: Hybrid, 4: Utility) và tên trang bị (ví dụ `Divine Life Flask`) từ `PlayerInventories`.
+- Thêm chế độ `"Auto"` cho danh sách `FlaskTypes` (`"Auto"`, `"HP"`, `"Mana"`, `"Utility"`): Tự động kích hoạt hành vi theo đúng loại bình thực tế đang trang bị trên đai lưng.
+- Thêm nút `[🔄 Tự động đồng bộ loại bình theo trang bị game]` trong tab Flasks: Tự động quét và đồng bộ chuẩn xác 100% cả 5 ô bình thuốc chỉ với 1 cú click.
+- Hiển thị tên trang bị và cảnh báo lệch loại thời gian thực (`[⚠️ Lệch loại: Cấu hình là Mana]`) kèm nút 1-click sửa nhanh trực tiếp trên từng thẻ bình thuốc.
+
+### Changed
+- Nâng cấp phiên bản SemVer từ `v1.2.2` lên `v1.2.3`.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlaskSettings.cs
+- rules.md
+- changelog.md
+
 ## [v1.2.2] - 2026-11-16 16:25:40
 
 ### User Request

@@ -38,7 +38,7 @@ namespace AutoFlask
         // Flask 1
         [Menu("Flask 1 Settings", 110, 100)] public EmptyNode Flask1Header { get; set; }
         [Menu("Enable Flask 1", 111, 110)] public ToggleNode IsFlask1Enabled { get; set; } = new ToggleNode(true);
-        [Menu("Flask 1 Type", 112, 110)] public ListNode Flask1Type { get; set; } = new ListNode { Value = "HP", Values = new List<string> { "HP", "Mana", "Utility" } };
+        [Menu("Flask 1 Type", 112, 110)] public ListNode Flask1Type { get; set; } = new ListNode { Value = "HP", Values = new List<string> { "Auto", "HP", "Mana", "Utility" } };
         [Menu("Use % Threshold (HP/Mana)", 113, 110)] public RangeNode<int> Flask1Percentage { get; set; } = new RangeNode<int>(40, 10, 100);
         [Menu("Key 1", 114, 110)] public HotkeyNodeV2 Flask1Key { get; set; } = new HotkeyNodeV2(Keys.D1);
         [Menu("Enable Cooldown 1", 115, 110)] public ToggleNode Flask1CooldownEnable { get; set; } = new ToggleNode(true);
@@ -48,7 +48,7 @@ namespace AutoFlask
         // Flask 2
         [Menu("Flask 2 Settings", 120, 100)] public EmptyNode Flask2Header { get; set; }
         [Menu("Enable Flask 2", 121, 120)] public ToggleNode IsFlask2Enabled { get; set; } = new ToggleNode(true);
-        [Menu("Flask 2 Type", 122, 120)] public ListNode Flask2Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "HP", "Mana", "Utility" } };
+        [Menu("Flask 2 Type", 122, 120)] public ListNode Flask2Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "Auto", "HP", "Mana", "Utility" } };
         [Menu("Use % Threshold (HP/Mana)", 123, 120)] public RangeNode<int> Flask2Percentage { get; set; } = new RangeNode<int>(30, 10, 100);
         [Menu("Key 2", 124, 120)] public HotkeyNodeV2 Flask2Key { get; set; } = new HotkeyNodeV2(Keys.D2);
         [Menu("Enable Cooldown 2", 125, 120)] public ToggleNode Flask2CooldownEnable { get; set; } = new ToggleNode(true);
@@ -58,7 +58,7 @@ namespace AutoFlask
         // Flask 3
         [Menu("Flask 3 Settings", 130, 100)] public EmptyNode Flask3Header { get; set; }
         [Menu("Enable Flask 3", 131, 130)] public ToggleNode IsFlask3Enabled { get; set; } = new ToggleNode(true);
-        [Menu("Flask 3 Type", 132, 130)] public ListNode Flask3Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "HP", "Mana", "Utility" } };
+        [Menu("Flask 3 Type", 132, 130)] public ListNode Flask3Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "Auto", "HP", "Mana", "Utility" } };
         [Menu("Use % Threshold (HP/Mana)", 133, 130)] public RangeNode<int> Flask3Percentage { get; set; } = new RangeNode<int>(20, 10, 100);
         [Menu("Key 3", 134, 130)] public HotkeyNodeV2 Flask3Key { get; set; } = new HotkeyNodeV2(Keys.D3);
         [Menu("Enable Cooldown 3", 135, 130)] public ToggleNode Flask3CooldownEnable { get; set; } = new ToggleNode(true);
@@ -68,7 +68,7 @@ namespace AutoFlask
         // Flask 4
         [Menu("Flask 4 Settings", 140, 100)] public EmptyNode Flask4Header { get; set; }
         [Menu("Enable Flask 4", 141, 140)] public ToggleNode IsFlask4Enabled { get; set; } = new ToggleNode(true);
-        [Menu("Flask 4 Type", 142, 140)] public ListNode Flask4Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "HP", "Mana", "Utility" } };
+        [Menu("Flask 4 Type", 142, 140)] public ListNode Flask4Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "Auto", "HP", "Mana", "Utility" } };
         [Menu("Use % Threshold (HP/Mana)", 143, 140)] public RangeNode<int> Flask4Percentage { get; set; } = new RangeNode<int>(15, 10, 100);
         [Menu("Key 4", 144, 140)] public HotkeyNodeV2 Flask4Key { get; set; } = new HotkeyNodeV2(Keys.D4);
         [Menu("Enable Cooldown 4", 145, 140)] public ToggleNode Flask4CooldownEnable { get; set; } = new ToggleNode(true);
@@ -78,7 +78,7 @@ namespace AutoFlask
         // Flask 5
         [Menu("Flask 5 Settings", 150, 100)] public EmptyNode Flask5Header { get; set; }
         [Menu("Enable Flask 5", 151, 150)] public ToggleNode IsFlask5Enabled { get; set; } = new ToggleNode(true);
-        [Menu("Flask 5 Type", 152, 150)] public ListNode Flask5Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "HP", "Mana", "Utility" } };
+        [Menu("Flask 5 Type", 152, 150)] public ListNode Flask5Type { get; set; } = new ListNode { Value = "Utility", Values = new List<string> { "Auto", "HP", "Mana", "Utility" } };
         [Menu("Use % Threshold (HP/Mana)", 153, 150)] public RangeNode<int> Flask5Percentage { get; set; } = new RangeNode<int>(10, 10, 100);
         [Menu("Key 5", 154, 150)] public HotkeyNodeV2 Flask5Key { get; set; } = new HotkeyNodeV2(Keys.D5);
         [Menu("Enable Cooldown 5", 155, 150)] public ToggleNode Flask5CooldownEnable { get; set; } = new ToggleNode(true);

@@ -1,3 +1,0 @@
-Build failed:
-[17-Mar-2026 2:51:01 PM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlask.cs(142, 45)] CS1061: 'AutoFlaskSettings' does not contain a definition for 'Skill1' and no accessible extension method 'Skill1' accepting a first argument of type 'AutoFlaskSettings' could be found (are you missing a using directive or an assembly reference?)
-[17-Mar-2026 2:51:01 PM, C:\Users\ptlua\OneDrive\Game\POE 1\ExileApi\Plugins\Source\AutoFlask\AutoFlask.cs(148, 45)] CS1061: 'AutoFlaskSettings' does not contain a definition for 'Skill2' and no accessible extension method 'Skill2' accepting a first argument of type 'AutoFlaskSettings' could be found (are you missing a using directive or an assembly reference?)

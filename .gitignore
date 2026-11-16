@@ -1,0 +1,17 @@
+# Build results
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# User-specific & IDE files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.serena/
+
+# Temporary files
+*.log
+*.tmp

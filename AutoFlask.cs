@@ -29,6 +29,7 @@ namespace AutoFlask
         private readonly Stopwatch _skill1Timer = new Stopwatch();
         private readonly Stopwatch _skill2Timer = new Stopwatch();
         private readonly Stopwatch _skill3Timer = new Stopwatch();
+        private readonly Stopwatch _globalActionTimer = new Stopwatch();
 
         [DllImport("user32.dll")]
         private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
@@ -74,6 +75,7 @@ namespace AutoFlask
             _skill1Timer.Start();
             _skill2Timer.Start();
             _skill3Timer.Start();
+            _globalActionTimer.Start();
 
             // Auto-migrate legacy inverted layout where slot 1 was Mana and slot 5 was HP
             if (Settings.Flask1Type.Value == "Mana" && Settings.Flask5Type.Value == "HP")
@@ -131,8 +133,21 @@ namespace AutoFlask
                     return base.Tick();
             }
 
-            HandleFlasks();
-            HandleSkills();
+            // Global Action Throttling / Rate Limiter to prevent game kick out ("Too many actions performed")
+            int throttleMs = Settings.ActionThrottleMs?.Value ?? 80;
+            if (_globalActionTimer.IsRunning && _globalActionTimer.ElapsedMilliseconds < throttleMs)
+                return base.Tick();
+
+            bool actionTaken = HandleFlasks();
+            if (!actionTaken)
+            {
+                actionTaken = HandleSkills();
+            }
+
+            if (actionTaken)
+            {
+                _globalActionTimer.Restart();
+            }
 
             return base.Tick();
         }
@@ -377,9 +392,10 @@ namespace AutoFlask
                 }
             }
 
-            if (timer.ElapsedMilliseconds < cooldownMs)
+            int effectiveCd = Math.Max(250, cooldownMs);
+            if (timer.ElapsedMilliseconds < effectiveCd)
             {
-                long rem = cooldownMs - timer.ElapsedMilliseconds;
+                long rem = effectiveCd - timer.ElapsedMilliseconds;
                 status = $"Cooldown ({(rem / 1000f):F1}s)";
                 return false;
             }
@@ -388,7 +404,7 @@ namespace AutoFlask
             return true;
         }
 
-        private void ProcessSkill(
+        private bool ProcessSkill(
             bool isEnabled,
             Keys key,
             int cooldownMs,
@@ -398,30 +414,32 @@ namespace AutoFlask
             int tracingRange,
             Stopwatch timer)
         {
-            if (!isEnabled || key == Keys.None) return;
+            if (!isEnabled || key == Keys.None) return false;
 
             bool isReady = IsSkillReady(key, timer, cooldownMs, isVaalSkill, useWhenAvailable, out _);
-            if (!isReady) return;
+            if (!isReady) return false;
 
             bool canCast = !tracingEnabled || TraceMonster(tracingRange);
             if (canCast)
             {
                 timer.Restart();
                 SendKeyPress((byte)key);
+                return true;
             }
+            return false;
         }
 
-        private void HandleSkills()
+        private bool HandleSkills()
         {
             var life = GameController.Player?.GetComponent<Life>();
-            if (life == null) return;
+            if (life == null) return false;
 
             // Check Minimum Mana Safety
             int minMana = Settings.MinManaForSkills?.Value ?? 10;
-            if (life.CurMana < minMana) return;
+            if (life.CurMana < minMana) return false;
 
             // Skill 1
-            ProcessSkill(
+            if (ProcessSkill(
                 Settings.Skill1Enabled.Value,
                 Settings.Skill1Key.Value.Key,
                 Settings.Skill1Cooldown.Value,
@@ -429,10 +447,11 @@ namespace AutoFlask
                 Settings.Skill1UseWhenAvailable.Value,
                 Settings.Skill1TracingEnabled.Value,
                 Settings.Skill1TracingRange.Value,
-                _skill1Timer);
+                _skill1Timer))
+                return true;
 
             // Skill 2
-            ProcessSkill(
+            if (ProcessSkill(
                 Settings.Skill2Enabled.Value,
                 Settings.Skill2Key.Value.Key,
                 Settings.Skill2Cooldown.Value,
@@ -440,10 +459,11 @@ namespace AutoFlask
                 Settings.Skill2UseWhenAvailable.Value,
                 Settings.Skill2TracingEnabled.Value,
                 Settings.Skill2TracingRange.Value,
-                _skill2Timer);
+                _skill2Timer))
+                return true;
 
             // Skill 3
-            ProcessSkill(
+            if (ProcessSkill(
                 Settings.Skill3Enabled.Value,
                 Settings.Skill3Key.Value.Key,
                 Settings.Skill3Cooldown.Value,
@@ -451,7 +471,10 @@ namespace AutoFlask
                 Settings.Skill3UseWhenAvailable.Value,
                 Settings.Skill3TracingEnabled.Value,
                 Settings.Skill3TracingRange.Value,
-                _skill3Timer);
+                _skill3Timer))
+                return true;
+
+            return false;
         }
         #endregion
 
@@ -475,24 +498,31 @@ namespace AutoFlask
             return configuredType;
         }
 
-        private void HandleFlasks()
+        private bool HandleFlasks()
         {
-            if (!Settings.IsAutoFlasksGroupEnabled.Value) return;
+            if (!Settings.IsAutoFlasksGroupEnabled.Value) return false;
 
             var life = GameController.Player?.GetComponent<Life>();
-            if (life == null || life.MaxHP <= 0) return;
+            if (life == null || life.MaxHP <= 0) return false;
 
             float hpPercent = (float)life.CurHP / life.MaxHP * 100f;
             float manaPercent = life.MaxMana > 0 ? (float)life.CurMana / life.MaxMana * 100f : 100f;
 
-            ProcessFlask(0, Settings.IsFlask1Enabled.Value, ResolveFlaskType(0, Settings.Flask1Type.Value), Settings.Flask1Percentage.Value, (byte)Settings.Flask1Key.Value.Key, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer);
-            ProcessFlask(1, Settings.IsFlask2Enabled.Value, ResolveFlaskType(1, Settings.Flask2Type.Value), Settings.Flask2Percentage.Value, (byte)Settings.Flask2Key.Value.Key, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer);
-            ProcessFlask(2, Settings.IsFlask3Enabled.Value, ResolveFlaskType(2, Settings.Flask3Type.Value), Settings.Flask3Percentage.Value, (byte)Settings.Flask3Key.Value.Key, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer);
-            ProcessFlask(3, Settings.IsFlask4Enabled.Value, ResolveFlaskType(3, Settings.Flask4Type.Value), Settings.Flask4Percentage.Value, (byte)Settings.Flask4Key.Value.Key, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer);
-            ProcessFlask(4, Settings.IsFlask5Enabled.Value, ResolveFlaskType(4, Settings.Flask5Type.Value), Settings.Flask5Percentage.Value, (byte)Settings.Flask5Key.Value.Key, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer);
+            if (ProcessFlask(0, Settings.IsFlask1Enabled.Value, ResolveFlaskType(0, Settings.Flask1Type.Value), Settings.Flask1Percentage.Value, (byte)Settings.Flask1Key.Value.Key, Settings.Flask1CooldownEnable.Value, Settings.Flask1Cooldown.Value, Settings.Flask1UseWhenAvailable.Value, hpPercent, manaPercent, _flask1Timer))
+                return true;
+            if (ProcessFlask(1, Settings.IsFlask2Enabled.Value, ResolveFlaskType(1, Settings.Flask2Type.Value), Settings.Flask2Percentage.Value, (byte)Settings.Flask2Key.Value.Key, Settings.Flask2CooldownEnable.Value, Settings.Flask2Cooldown.Value, Settings.Flask2UseWhenAvailable.Value, hpPercent, manaPercent, _flask2Timer))
+                return true;
+            if (ProcessFlask(2, Settings.IsFlask3Enabled.Value, ResolveFlaskType(2, Settings.Flask3Type.Value), Settings.Flask3Percentage.Value, (byte)Settings.Flask3Key.Value.Key, Settings.Flask3CooldownEnable.Value, Settings.Flask3Cooldown.Value, Settings.Flask3UseWhenAvailable.Value, hpPercent, manaPercent, _flask3Timer))
+                return true;
+            if (ProcessFlask(3, Settings.IsFlask4Enabled.Value, ResolveFlaskType(3, Settings.Flask4Type.Value), Settings.Flask4Percentage.Value, (byte)Settings.Flask4Key.Value.Key, Settings.Flask4CooldownEnable.Value, Settings.Flask4Cooldown.Value, Settings.Flask4UseWhenAvailable.Value, hpPercent, manaPercent, _flask4Timer))
+                return true;
+            if (ProcessFlask(4, Settings.IsFlask5Enabled.Value, ResolveFlaskType(4, Settings.Flask5Type.Value), Settings.Flask5Percentage.Value, (byte)Settings.Flask5Key.Value.Key, Settings.Flask5CooldownEnable.Value, Settings.Flask5Cooldown.Value, Settings.Flask5UseWhenAvailable.Value, hpPercent, manaPercent, _flask5Timer))
+                return true;
+
+            return false;
         }
 
-        private void ProcessFlask(
+        private bool ProcessFlask(
             int slotIndex,
             bool isEnabled,
             string flaskType,
@@ -505,10 +535,11 @@ namespace AutoFlask
             float currentManaPercent,
             Stopwatch timer)
         {
-            if (!isEnabled || key == 0) return;
+            if (!isEnabled || key == 0) return false;
 
-            bool cooldownReady = !cooldownEnable || timer.ElapsedMilliseconds >= cooldownMs;
-            if (!cooldownReady) return;
+            // Enforce hard minimum safety cooldown to prevent game kick out (never faster than 300ms)
+            int effectiveCooldown = cooldownEnable ? Math.Max(250, cooldownMs) : 350;
+            if (timer.ElapsedMilliseconds < effectiveCooldown) return false;
 
             if (flaskType == "HP")
             {
@@ -516,6 +547,7 @@ namespace AutoFlask
                 {
                     timer.Restart();
                     SendKeyPress(key);
+                    return true;
                 }
             }
             else if (flaskType == "Mana")
@@ -524,17 +556,38 @@ namespace AutoFlask
                 {
                     timer.Restart();
                     SendKeyPress(key);
+                    return true;
+                }
+            }
+            else if (flaskType == "Hybrid")
+            {
+                if (currentHpPercent <= thresholdPercent || currentManaPercent <= thresholdPercent)
+                {
+                    timer.Restart();
+                    SendKeyPress(key);
+                    return true;
                 }
             }
             else if (flaskType == "Utility")
             {
-                bool availabilityReady = !useWhenAvailable || IsUtilityFlaskAvailable(slotIndex, out _);
-                if (availabilityReady)
+                if (useWhenAvailable)
+                {
+                    if (IsUtilityFlaskAvailable(slotIndex, out _))
+                    {
+                        timer.Restart();
+                        SendKeyPress(key);
+                        return true;
+                    }
+                }
+                else if (cooldownEnable)
                 {
                     timer.Restart();
                     SendKeyPress(key);
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private static readonly string[] LifeFlaskBuffs = { "flask_effect_life" };
@@ -979,7 +1032,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.2.4");
+            ImGui.TextDisabled("v1.2.5");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -1503,6 +1556,13 @@ namespace AutoFlask
                 Settings.KeyPressDurationMs.Value = pressDuration;
             }
             ImGui.TextDisabled("Time between key down and key up (sent asynchronously on thread pool).");
+
+            int throttle = Settings.ActionThrottleMs?.Value ?? 80;
+            if (ImGui.SliderInt("Action Rate Limiter / Inter-Action Delay (ms)", ref throttle, 20, 250))
+            {
+                Settings.ActionThrottleMs.Value = throttle;
+            }
+            ImGui.TextDisabled("Khoảng cách tối thiểu giữa 2 hành động phím liên tiếp (Chống kick out 'Too many actions performed' của máy chủ PoE).");
         }
 
         private void DrawKeySelector(string label, HotkeyNodeV2 node)

@@ -26,6 +26,9 @@ namespace AutoFlask
 
         [Menu("Key Press Duration (ms)", 53, 50)]
         public RangeNode<int> KeyPressDurationMs { get; set; } = new RangeNode<int>(20, 5, 100);
+
+        [Menu("Action Rate Limiter / Inter-Action Delay (ms)", 54, 50)]
+        public RangeNode<int> ActionThrottleMs { get; set; } = new RangeNode<int>(80, 20, 250);
         #endregion
 
         #region Flask Settings

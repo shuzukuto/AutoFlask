@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.5] - 2026-11-16 21:25:00
+
+### User Request
+> bot thực hiện quá nhiều action dẫn đến game kick out
+
+### Fixed
+- Khắc phục triệt để lỗi gửi quá nhiều hành động dồn dập (burst actions) trong 1 frame khiến máy chủ Path of Exile ngắt kết nối với thông báo "Too many actions performed, disconnected from server".
+- Triển khai bộ điều tiết nhịp hành động toàn cục (Global Action Rate Limiter / Inter-Action Throttler): Đảm bảo khoảng cách giữa 2 lần nhấn phím bất kỳ (xuyên suốt cả 5 bình và 3 kỹ năng) luôn đạt tối thiểu `ActionThrottleMs` (mặc định 80ms, tương đương tối đa ~12.5 actions/giây), loại bỏ hoàn toàn việc xả 5 bình + 3 chiêu trong cùng một mili-giây.
+- Phân phối thứ tự hành động thông minh: Mỗi nhịp frame chỉ xử lý duy nhất 1 hành động (ưu tiên bình Máu/Mana khẩn cấp trước, sau đó đến Utility và Kỹ năng), giúp thao tác uống bình piano nhịp nhàng tự nhiên như người chơi thật.
+- Bổ sung rào chắn thời gian đệm an toàn cứng (Hard Minimum Cooldown >= 250ms - 350ms) cho mọi ô bình thuốc, ngăn chặn tình trạng spam phím liên tục mỗi frame khi người dùng tắt `Enable Cooldown` hoặc đặt cooldown = 0.
+- Sửa lỗi logic `Utility` khi tắt cả `useWhenAvailable` lẫn `cooldownEnable` bị rơi vào vòng lặp nhấn phím liên tục mỗi frame.
+- Bổ sung cơ chế Debounce an toàn (250ms - 500ms) cho kỹ năng Vaal và kỹ năng tự dùng để chống spam phím trong thời gian chờ máy chủ PoE cập nhật dữ liệu linh hồn (Souls) và Soul Gain Prevention.
+
+### Added
+- Bổ sung cấu hình `ActionThrottleMs` (Action Rate Limiter / Inter-Action Delay) trong `AutoFlaskSettings` (phạm vi từ 20ms đến 250ms, mặc định 80ms) và thanh trượt điều chỉnh trực quan tại tab `🛡️ Safety & Config`.
+
+### Changed
+- Nâng cấp phiên bản SemVer từ `v1.2.4` lên `v1.2.5`.
+- Cập nhật hiển thị huy hiệu phiên bản trên giao diện ImGui thành `v1.2.5`.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlaskSettings.cs
+- rules.md
+- changelog.md
+
 ## [v1.2.4] - 2026-11-16 17:15:00
 
 ### User Request

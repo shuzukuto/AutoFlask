@@ -73,3 +73,8 @@ Giao diện cài đặt phải được tổ chức thành 5 Tab rõ ràng:
 1. **Foreground Enforcement**: Khi người dùng alt-tab ra khỏi game, plugin phải ngừng gửi keystroke để tránh gõ phím vào ứng dụng ngoài.
 2. **Safe Zones Suppression**: Tự động vô hiệu hóa tự động uống bình và thi triển kỹ năng khi ở Hideout hoặc Town.
 3. **Player State Validation**: Kiểm tra trạng thái người chơi (`!GameController.Player.IsAlive`, `InGame`, `IsLoading`) trước khi xử lý bất kỳ hành động nào.
+4. **Action Rate Limiter & Throttling (Chống kick out "Too many actions performed")**:
+   - Bộ đếm nhịp toàn cục `_globalActionTimer`: Bắt buộc khoảng cách giữa 2 hành động phím liên tiếp (xuyên suốt cả 5 bình thuốc và 3 kỹ năng) luôn đạt tối thiểu `ActionThrottleMs` (mặc định 80ms, có thể tinh chỉnh từ 20-250ms).
+   - Mỗi frame (`Tick`) chỉ thực thi tối đa 1 hành động duy nhất (ưu tiên bình Máu/Mana khẩn cấp trước, sau đó đến các bình Utility và Kỹ năng).
+   - Rào chắn hồi chiêu an toàn (Hard Minimum Cooldown): Mọi ô bình đều có thời gian đệm tối thiểu (ít nhất 250ms - 350ms) ngay cả khi tắt `Enable Cooldown` hoặc đặt 0ms, loại bỏ triệt để lỗi spam phím lặp lại hàng trăm lần mỗi giây.
+   - Cơ chế Debounce cho kỹ năng Vaal & Kỹ năng Auto: Chặn spam liên tục trong khoảng 250ms - 500ms khi đợi máy chủ PoE phản hồi trạng thái Soul Gain Prevention / Cooldown.

@@ -10,7 +10,7 @@ Tài liệu đặc tả kiến trúc và tiêu chuẩn thiết kế còn hiệu 
 - Kế thừa `BaseSettingsPlugin<AutoFlaskSettings>` từ `ExileCore`.
 - Target Framework: `.NET 10.0-windows` (x64).
 - Giao diện đồ họa cấu hình: `Hexa.NET.ImGui` kết hợp `base.DrawSettings()` dự phòng.
-- Đồ họa trực quan trong game (HUD Overlay): `IGraphics` (`Graphics.DrawText`, `Graphics.DrawBox`, `Graphics.DrawFrame`).
+- Đồ họa trực quan trong game (HUD Overlay): `IGraphics` (`Graphics.DrawText`, tùy chọn khung nền hộp `Graphics.DrawBox` qua cấu hình `DrawHudBackground`, mặc định tắt).
 
 ### 1.2. Cơ chế Gửi Phím (Input System)
 - Sử dụng `user32.dll` (`keybd_event`) kết hợp `Task.Delay(duration).ContinueWith(...)`.

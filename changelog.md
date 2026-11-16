@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.1] - 2026-11-16 15:42:48
+
+### User Request
+> bỏ tô nền HUD ingame
+
+### Changed
+- Mặc định tắt hoàn toàn hộp nền tô (`DrawBox`) và khung viền (`DrawFrame`) của HUD On-Screen trong game, chỉ hiển thị chữ trực tiếp trên màn hình theo yêu cầu người dùng.
+- Thêm cài đặt `DrawHudBackground` (mặc định tắt) trong AutoFlaskSettings và giao diện tab HUD Overlay để người chơi có thể chủ động bật/tắt nếu cần.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlaskSettings.cs
+- rules.md
+- changelog.md
+
 ## [v1.1.0] - 2026-11-16 15:08:16
 
 ### User Request

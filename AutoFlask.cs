@@ -556,20 +556,24 @@ namespace AutoFlask
                 }
             }
 
-            // Measure background box dimensions
-            float maxWidth = 0f;
-            float lineHeight = 19f;
-            foreach (var line in lines)
-            {
-                var size = Graphics.MeasureText(line.text);
-                if (size.X > maxWidth) maxWidth = size.X;
-            }
+            const float lineHeight = 19f;
 
-            if (maxWidth > 0)
+            // Draw optional background box
+            if (Settings.DrawHudBackground.Value)
             {
-                var boxRect = new RectangleF(startPos.X - 8, startPos.Y - 6, maxWidth + 16, lines.Count * lineHeight + 12);
-                Graphics.DrawBox(boxRect, new Color(10, 15, 20, 190));
-                Graphics.DrawFrame(boxRect, new Color(40, 60, 80, 220), 1);
+                float maxWidth = 0f;
+                foreach (var line in lines)
+                {
+                    var size = Graphics.MeasureText(line.text);
+                    if (size.X > maxWidth) maxWidth = size.X;
+                }
+
+                if (maxWidth > 0)
+                {
+                    var boxRect = new RectangleF(startPos.X - 8, startPos.Y - 6, maxWidth + 16, lines.Count * lineHeight + 12);
+                    Graphics.DrawBox(boxRect, new Color(10, 15, 20, 190));
+                    Graphics.DrawFrame(boxRect, new Color(40, 60, 80, 220), 1);
+                }
             }
 
             foreach (var (text, color) in lines)
@@ -586,7 +590,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.1.0");
+            ImGui.TextDisabled("v1.1.1");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -928,6 +932,9 @@ namespace AutoFlask
 
             bool showFlasks = Settings.ShowFlaskStatusOnHud.Value;
             if (ImGui.Checkbox("Show Flask Status Badges", ref showFlasks)) Settings.ShowFlaskStatusOnHud.Value = showFlasks;
+
+            bool drawBg = Settings.DrawHudBackground.Value;
+            if (ImGui.Checkbox("Draw Background Box (Tô nền khung HUD)", ref drawBg)) Settings.DrawHudBackground.Value = drawBg;
         }
 
         private void DrawSafetyTab()

@@ -24,6 +24,7 @@ namespace AutoFlask
         private readonly Stopwatch _flask3Timer = new Stopwatch();
         private readonly Stopwatch _flask4Timer = new Stopwatch();
         private readonly Stopwatch _flask5Timer = new Stopwatch();
+        private readonly string[] _lastDetectedFlaskType = new string[5];
 
         private readonly Stopwatch _skill1Timer = new Stopwatch();
         private readonly Stopwatch _skill2Timer = new Stopwatch();
@@ -460,7 +461,15 @@ namespace AutoFlask
             if (configuredType == "Auto")
             {
                 var detected = GetDetectedFlaskType(slotIndex, out _);
-                if (!string.IsNullOrEmpty(detected)) return detected;
+                if (!string.IsNullOrEmpty(detected))
+                {
+                    _lastDetectedFlaskType[slotIndex] = detected;
+                    return detected;
+                }
+                if (!string.IsNullOrEmpty(_lastDetectedFlaskType[slotIndex]))
+                {
+                    return _lastDetectedFlaskType[slotIndex];
+                }
                 return slotIndex == 0 ? "HP" : "Utility";
             }
             return configuredType;
@@ -536,25 +545,87 @@ namespace AutoFlask
             "flask_instant_mana_recovery_at_end_of_effect"
         };
 
-        private IEnumerable<string> GetFlaskBuffNames(Flask flask)
+        private static readonly Dictionary<string, string> UtilityFlaskPathToBuff = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Metadata/Items/Flasks/FlaskUtility1"] = "flask_utility_critical_strike_chance", // Diamond Flask
+            ["Metadata/Items/Flasks/FlaskUtility2"] = "flask_utility_resistance_fire",        // Ruby Flask
+            ["Metadata/Items/Flasks/FlaskUtility3"] = "flask_utility_resistance_cold",        // Sapphire Flask
+            ["Metadata/Items/Flasks/FlaskUtility4"] = "flask_utility_resistance_lightning",   // Topaz Flask
+            ["Metadata/Items/Flasks/FlaskUtility5"] = "flask_utility_iron_skin",              // Granite Flask
+            ["Metadata/Items/Flasks/FlaskUtility6"] = "flask_utility_sprint",                 // Quicksilver Flask
+            ["Metadata/Items/Flasks/FlaskUtility7"] = "flask_utility_resist_chaos",           // Amethyst Flask
+            ["Metadata/Items/Flasks/FlaskUtility8"] = "flask_utility_phase",                  // Quartz Flask
+            ["Metadata/Items/Flasks/FlaskUtility9"] = "flask_utility_evasion",                // Jade Flask
+            ["Metadata/Items/Flasks/FlaskUtility10"] = "flask_utility_armor",                 // Basalt Flask
+            ["Metadata/Items/Flasks/FlaskUtility11"] = "flask_utility_aquamarine",            // Aquamarine Flask
+            ["Metadata/Items/Flasks/FlaskUtility12"] = "flask_utility_smoke",                 // Stibnite Flask
+            ["Metadata/Items/Flasks/FlaskUtility13"] = "flask_utility_speed",                 // Silver Flask (Onslaught)
+            ["Metadata/Items/Flasks/FlaskUtility14"] = "flask_utility_consecrated_ground",   // Sulphur Flask
+            ["Metadata/Items/Flasks/FlaskUtility15"] = "flask_utility_resist_all",            // Bismuth Flask
+            ["Metadata/Items/Flasks/FlaskUtility16"] = "flask_utility_corundum",              // Corundum Flask
+            ["Metadata/Items/Flasks/FlaskUtility17"] = "flask_utility_gold",                  // Gold Flask
+        };
+
+        private static readonly Dictionary<string, string> UtilityFlaskNameToBuff = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Diamond Flask"] = "flask_utility_critical_strike_chance",
+            ["Ruby Flask"] = "flask_utility_resistance_fire",
+            ["Sapphire Flask"] = "flask_utility_resistance_cold",
+            ["Topaz Flask"] = "flask_utility_resistance_lightning",
+            ["Granite Flask"] = "flask_utility_iron_skin",
+            ["Quicksilver Flask"] = "flask_utility_sprint",
+            ["Amethyst Flask"] = "flask_utility_resist_chaos",
+            ["Quartz Flask"] = "flask_utility_phase",
+            ["Jade Flask"] = "flask_utility_evasion",
+            ["Basalt Flask"] = "flask_utility_armor",
+            ["Aquamarine Flask"] = "flask_utility_aquamarine",
+            ["Stibnite Flask"] = "flask_utility_smoke",
+            ["Silver Flask"] = "flask_utility_speed",
+            ["Sulphur Flask"] = "flask_utility_consecrated_ground",
+            ["Bismuth Flask"] = "flask_utility_resist_all",
+            ["Corundum Flask"] = "flask_utility_corundum",
+            ["Gold Flask"] = "flask_utility_gold",
+        };
+
+        private IEnumerable<string> GetFlaskBuffNames(Flask flask, Entity item = null)
         {
             if (flask == null || flask.Address == 0) return Enumerable.Empty<string>();
             try
             {
                 var type = flask.M.Read<int>(flask.Address + 0x28, 0x10);
-                return type switch
+                if (type == 1) return LifeFlaskBuffs;
+                if (type == 2) return ManaFlaskBuffs;
+                if (type == 3) return LifeFlaskBuffs.Concat(ManaFlaskBuffs);
+                if (type == 4)
                 {
-                    1 => LifeFlaskBuffs,
-                    2 => ManaFlaskBuffs,
-                    3 => LifeFlaskBuffs.Concat(ManaFlaskBuffs),
-                    4 when flask.M.ReadStringU(flask.M.Read<long>(flask.Address + 0x28, 0x18, 0x0)) is { } s and not "" => new[] { s },
-                    _ => Enumerable.Empty<string>()
-                };
+                    var buffList = new List<string>();
+                    string s = flask.M.ReadStringU(flask.M.Read<long>(flask.Address + 0x28, 0x18, 0x0));
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        buffList.Add(s);
+                    }
+
+                    if (item != null)
+                    {
+                        if (!string.IsNullOrEmpty(item.Path) && UtilityFlaskPathToBuff.TryGetValue(item.Path, out var pathBuff))
+                        {
+                            if (!buffList.Contains(pathBuff)) buffList.Add(pathBuff);
+                        }
+                        var baseType = GameController.Files?.BaseItemTypes?.Translate(item.Path);
+                        var baseName = baseType?.BaseName;
+                        if (!string.IsNullOrEmpty(baseName) && UtilityFlaskNameToBuff.TryGetValue(baseName, out var nameBuff))
+                        {
+                            if (!buffList.Contains(nameBuff)) buffList.Add(nameBuff);
+                        }
+                    }
+
+                    return buffList;
+                }
             }
             catch
             {
-                return Enumerable.Empty<string>();
             }
+            return Enumerable.Empty<string>();
         }
 
         private string GetDetectedFlaskType(int index, out string flaskName)
@@ -635,10 +706,11 @@ namespace AutoFlask
                 // Check active buffs
                 if (GameController.Player.TryGetComponent<Buffs>(out var playerBuffs))
                 {
-                    var buffNames = GetFlaskBuffNames(flask).ToList();
+                    var buffNames = GetFlaskBuffNames(flask, item).ToList();
                     var activeBuff = playerBuffs.BuffsList.FirstOrDefault(b =>
-                        b.FlaskSlot == index ||
-                        (buffNames.Count > 0 && buffNames.Contains(b.Name)));
+                        !string.IsNullOrEmpty(b.Name) &&
+                        ((buffNames.Count > 0 && buffNames.Contains(b.Name)) ||
+                         (b.Name.StartsWith("flask_utility") && b.FlaskSlot == index)));
 
                     if (activeBuff != null)
                     {
@@ -907,7 +979,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.2.3");
+            ImGui.TextDisabled("v1.2.4");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)

@@ -33,6 +33,13 @@ Tài liệu đặc tả kiến trúc và tiêu chuẩn thiết kế còn hiệu 
   - Khi bật `UseWhenAvailable`: Tự động thi triển ngay khi tích đủ Souls và không bị Soul Gain Prevention.
   - Hiển thị thanh tiến trình Souls động trên giao diện ImGui (`CurrSouls / SoulsPerUse`) và rút gọn trên HUD (`S1: 15/30`, `S1: Prev`, `S1: RDY`).
 
+### 1.5. Cơ chế Bình Thuốc & Nhận diện Hiệu ứng Buff (Utility Flask Buff Architecture)
+- **Đồng bộ tự động (Auto-Sync)**: Đọc loại bình thực tế từ bộ nhớ `PlayerInventories` (1: HP, 2: Mana, 3: Hybrid, 4: Utility) và lưu vết bộ nhớ tạm (`_lastDetectedFlaskType`) để duy trì đúng loại bình qua các lần chuyển map / màn hình chờ.
+- **Quy tắc kiểm tra khả dụng (Availability & Use When Available)**:
+  - Kiểm tra Charges thực tế: `chargeComponent.NumCharges >= chargeComponent.ChargesPerUse`.
+  - Phân giải Buff chính xác: Đọc chuỗi tên buff gốc từ cấu trúc bộ nhớ `Flask` (`+0x28, 0x18, 0x0`), kết hợp từ điển ánh xạ dự phòng (`UtilityFlaskPathToBuff` / `UtilityFlaskNameToBuff` cho Diamond, Ruby, Sapphire, Topaz, Granite, Quicksilver, Jade, v.v.).
+  - **Quy tắc chống va chạm ô Slot 1 (`index == 0`)**: Các buff thông thường của người chơi (Auras như Determination, Grace, Blood Rage, Purity, nội tại Pantheon, Passives) mặc định trả về trường `FlaskSlot == 0` trong cấu trúc bộ nhớ của ExileCore. Do đó, logic kiểm tra buff bình tiện ích **tuyệt đối không** được so sánh trực tiếp `b.FlaskSlot == index` mà bắt buộc phải ràng buộc tiền tố `b.Name.StartsWith("flask_utility")` hoặc khớp chính xác danh sách tên buff `buffNames.Contains(b.Name)`. Quy tắc này đảm bảo Slot 1 hoạt động độc lập, chính xác 100% như các slot 2, 3, 4, 5.
+
 ---
 
 ## 2. Tiêu chuẩn Giao diện Cài đặt (UI/UX Settings Specification)

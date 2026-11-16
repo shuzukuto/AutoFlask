@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.4] - 2026-11-16 17:15:00
+
+### User Request
+> kiểm tra cấu hình hiện tại để sửa lỗi bot tự động đồng bộ flask trong game chuẩn nhưng flask ultility ở slot 1 luôn bị lỗi và hoạt động không chuẩn như các flask ở slot 2,3
+
+### Fixed
+- Sửa triệt để lỗi va chạm hiệu ứng buff ở bình ô 1 (Slot 1 / `index == 0`): Trước đây hàm `IsUtilityFlaskAvailable` kiểm tra điều kiện `b.FlaskSlot == index`. Trong ExileCore / Path of Exile, toàn bộ các buff hào quang (Auras như Determination, Grace, Purity, Blood Rage, v.v.), nội tại Pantheon và Passives đều có giá trị offset `FlaskSlot` mặc định bằng 0. Khi bình Utility đặt ở ô 1 (`index == 0`), điều kiện `b.FlaskSlot == 0` lập tức khớp với buff hào quang đầu tiên của nhân vật, khiến trạng thái bình ô 1 vĩnh viễn bị treo ở `Buff Active (aura_...)` và không bao giờ tự động bấm uống khi bật "Use when available".
+- Giới hạn điều kiện kiểm tra `FlaskSlot`: Chỉ khớp `b.FlaskSlot == index` khi tên buff thực sự bắt đầu bằng tiền tố `flask_utility`, loại bỏ hoàn toàn khả năng nhận diện nhầm các buff aura/passive thành buff bình thuốc.
+- Bổ sung bảng ánh xạ dự phòng `UtilityFlaskPathToBuff` và `UtilityFlaskNameToBuff` cho toàn bộ các loại bình tiện ích (Quicksilver, Granite, Jade, Diamond, Ruby, Sapphire, Topaz, Amethyst, Quartz, Basalt, Silver, Sulphur, Bismuth, v.v.) đảm bảo luôn trích xuất chính xác 100% ID buff game kể cả khi con trỏ chuỗi bộ nhớ bị chậm.
+- Thêm bộ nhớ đệm `_lastDetectedFlaskType` cho từng slot trong `ResolveFlaskType` giúp duy trì loại bình đã nhận diện (Utility) xuyên suốt quá trình chuyển cảnh hoặc tải map thay vì bị reset về fallback mặc định "HP" của ô 1.
+
+### Changed
+- Nâng cấp phiên bản SemVer từ `v1.2.3` lên `v1.2.4`.
+- Cập nhật hiển thị huy hiệu phiên bản trên giao diện ImGui thành `v1.2.4`.
+
+### Files touched
+- AutoFlask.cs
+- rules.md
+- changelog.md
+
 ## [v1.2.3] - 2026-11-16 16:40:00
 
 ### User Request

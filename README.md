@@ -17,8 +17,10 @@ Plugin tự động sử dụng bình thuốc (Auto Flask) và hỗ trợ tung 3
 
 ### 2. Tự động tung kỹ năng (Triple Skill Automation)
 - Hỗ trợ tới 3 phím kỹ năng độc lập (Skill 1, Skill 2, Skill 3) như Blood Rage, Molten Shell, Enduring Cry, Curse, Totem, v.v.
+- **Tính năng "Use when available"**: Tự động phát hiện trạng thái hồi chiêu trong game thông qua `ActorSkill` và tự động tung kỹ năng ngay khi chiêu vừa hồi xong (Off Cooldown).
 - **Tự động nhắm mục tiêu (Monster Tracing / Auto-Aim)**: Tự động di chuột và nhắm vào quái vật có độ hiếm cao nhất (Unique > Rare > Magic > Normal) trong phạm vi cho phép trước khi xuất chiêu.
 - **Mana Safety Gate**: Không tung chiêu nếu lượng Mana hiện tại thấp hơn ngưỡng an toàn.
+- **Chẩn đoán kỹ năng thời gian thực**: Tự động nhận diện tên kỹ năng PoE theo khe phím (`Q`, `W`, `E`, `R`, `T`) và hiển thị trạng thái `Ready`, `On Cooldown` trực tiếp trong UI.
 - **Nút Test Cast**: Bấm thử kỹ năng ngay trong giao diện cài đặt.
 
 ### 3. Giao diện HUD On-Screen hiện đại

@@ -22,6 +22,10 @@ Tài liệu đặc tả kiến trúc và tiêu chuẩn thiết kế còn hiệu 
 - Tiêu chí ưu tiên: Quái vật còn sống, thù địch, có thể target được, độ hiếm cao nhất (`Rarity`), sau đó đến khoảng cách gần người chơi nhất.
 - Chuyển đổi tọa độ qua `Camera.WorldToScreen(PosNum)` sử dụng `System.Numerics.Vector3` và `System.Numerics.Vector2`.
 
+### 1.4. Cơ chế Kỹ năng Tự động & Use When Available
+- Tự động ánh xạ phím gán (`Keys.Q`, `W`, `E`, `R`, `T`) tới chỉ số ô kỹ năng (`SkillSlotIndex`) trong `Actor.ActorSkills`.
+- Khi bật `UseWhenAvailable`: Kiểm tra trạng thái hồi chiêu thực tế trong game (`!actorSkill.IsOnCooldown && actorSkill.CanBeUsed`) để tự động tung chiêu ngay khi hồi xong, đồng thời duy trì bộ đếm dự phòng an toàn.
+
 ---
 
 ## 2. Tiêu chuẩn Giao diện Cài đặt (UI/UX Settings Specification)
@@ -33,7 +37,8 @@ Giao diện cài đặt phải được tổ chức thành 5 Tab rõ ràng:
    - Cung cấp nút `Test Trigger` kiểm tra phím bấm tức thì.
    - Hỗ trợ 3 kiểu bình: HP (ngưỡng %), Mana (ngưỡng %), Utility (Use When Available).
 2. **⚔️ Skills (1-3)**:
-   - Quản lý Cooldown độc lập cho từng chiêu thức.
+   - Quản lý Cooldown độc lập cho từng chiêu thức kèm tùy chọn **Use When Available** (tự dùng ngay khi hồi chiêu trong game).
+   - Tự động nhận diện tên kỹ năng PoE (`ActorSkill.Name`) và hiển thị trạng thái động.
    - Tùy chọn Auto-Aim (Monster Tracing) kèm thanh trượt phạm vi (Range).
    - Nút `Test Cast` trực tiếp.
 3. **📊 HUD Overlay**:

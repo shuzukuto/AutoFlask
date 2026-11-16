@@ -98,24 +98,27 @@ namespace AutoFlask
         [Menu("Enable Skill 1", 311, 310)] public ToggleNode Skill1Enabled { get; set; } = new ToggleNode(false);
         [Menu("Skill 1 Key", 312, 310)] public HotkeyNodeV2 Skill1Key { get; set; } = new HotkeyNodeV2(Keys.W);
         [Menu("Skill 1 Cooldown", 313, 310)] public RangeNode<int> Skill1Cooldown { get; set; } = new RangeNode<int>(5000, 100, 30000);
-        [Menu("Skill 1 Tracing", 314, 310)] public ToggleNode Skill1TracingEnabled { get; set; } = new ToggleNode(false);
-        [Menu("Skill 1 Tracing Range", 315, 310)] public RangeNode<int> Skill1TracingRange { get; set; } = new RangeNode<int>(60, 50, 150);
+        [Menu("Use When Available (Skill 1)", 314, 310)] public ToggleNode Skill1UseWhenAvailable { get; set; } = new ToggleNode(false);
+        [Menu("Skill 1 Tracing", 315, 310)] public ToggleNode Skill1TracingEnabled { get; set; } = new ToggleNode(false);
+        [Menu("Skill 1 Tracing Range", 316, 310)] public RangeNode<int> Skill1TracingRange { get; set; } = new RangeNode<int>(60, 50, 150);
 
         // Skill 2
         [Menu("Skill 2 Settings", 320, 300)] public EmptyNode Skill2Header { get; set; }
         [Menu("Enable Skill 2", 321, 320)] public ToggleNode Skill2Enabled { get; set; } = new ToggleNode(false);
         [Menu("Skill 2 Key", 322, 320)] public HotkeyNodeV2 Skill2Key { get; set; } = new HotkeyNodeV2(Keys.E);
         [Menu("Skill 2 Cooldown", 323, 320)] public RangeNode<int> Skill2Cooldown { get; set; } = new RangeNode<int>(10000, 100, 30000);
-        [Menu("Skill 2 Tracing", 324, 320)] public ToggleNode Skill2TracingEnabled { get; set; } = new ToggleNode(false);
-        [Menu("Skill 2 Tracing Range", 325, 320)] public RangeNode<int> Skill2TracingRange { get; set; } = new RangeNode<int>(60, 50, 150);
+        [Menu("Use When Available (Skill 2)", 324, 320)] public ToggleNode Skill2UseWhenAvailable { get; set; } = new ToggleNode(false);
+        [Menu("Skill 2 Tracing", 325, 320)] public ToggleNode Skill2TracingEnabled { get; set; } = new ToggleNode(false);
+        [Menu("Skill 2 Tracing Range", 326, 320)] public RangeNode<int> Skill2TracingRange { get; set; } = new RangeNode<int>(60, 50, 150);
 
         // Skill 3
         [Menu("Skill 3 Settings", 330, 300)] public EmptyNode Skill3Header { get; set; }
         [Menu("Enable Skill 3", 331, 330)] public ToggleNode Skill3Enabled { get; set; } = new ToggleNode(false);
         [Menu("Skill 3 Key", 332, 330)] public HotkeyNodeV2 Skill3Key { get; set; } = new HotkeyNodeV2(Keys.R);
         [Menu("Skill 3 Cooldown", 333, 330)] public RangeNode<int> Skill3Cooldown { get; set; } = new RangeNode<int>(4000, 100, 30000);
-        [Menu("Skill 3 Tracing", 334, 330)] public ToggleNode Skill3TracingEnabled { get; set; } = new ToggleNode(false);
-        [Menu("Skill 3 Tracing Range", 335, 330)] public RangeNode<int> Skill3TracingRange { get; set; } = new RangeNode<int>(60, 50, 150);
+        [Menu("Use When Available (Skill 3)", 334, 330)] public ToggleNode Skill3UseWhenAvailable { get; set; } = new ToggleNode(false);
+        [Menu("Skill 3 Tracing", 335, 330)] public ToggleNode Skill3TracingEnabled { get; set; } = new ToggleNode(false);
+        [Menu("Skill 3 Tracing Range", 336, 330)] public RangeNode<int> Skill3TracingRange { get; set; } = new RangeNode<int>(60, 50, 150);
         #endregion
 
         #region HUD & Display Settings

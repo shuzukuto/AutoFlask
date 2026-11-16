@@ -158,7 +158,7 @@ namespace AutoFlask
             }
         }
 
-        #region Monster Tracing & Skills
+        #region Skills & Monster Tracing
         private bool TraceMonster(float maxDistance)
         {
             if (!GameController.Window.IsForeground())
@@ -206,6 +206,100 @@ namespace AutoFlask
             return false;
         }
 
+        private ActorSkill FindActorSkill(Keys key)
+        {
+            var actor = GameController.Player?.GetComponent<Actor>();
+            if (actor == null) return null;
+
+            int targetSlot = key switch
+            {
+                Keys.Q => 3,
+                Keys.W => 4,
+                Keys.E => 5,
+                Keys.R => 6,
+                Keys.T => 7,
+                _ => -1
+            };
+
+            if (targetSlot >= 0)
+            {
+                var skillBySlot = actor.ActorSkills.FirstOrDefault(s => s.SkillSlotIndex == targetSlot);
+                if (skillBySlot != null) return skillBySlot;
+            }
+
+            return null;
+        }
+
+        private bool IsSkillReady(Keys key, Stopwatch timer, int cooldownMs, bool useWhenAvailable, out string status)
+        {
+            var actorSkill = FindActorSkill(key);
+
+            if (actorSkill != null)
+            {
+                if (actorSkill.IsOnCooldown)
+                {
+                    status = "On Cooldown";
+                    return false;
+                }
+
+                if (actorSkill.TotalUses > 0 && actorSkill.RemainingUses <= 0)
+                {
+                    status = "No Charges";
+                    return false;
+                }
+
+                if (!actorSkill.CanBeUsed)
+                {
+                    status = "Cannot Use";
+                    return false;
+                }
+
+                if (useWhenAvailable)
+                {
+                    if (timer.ElapsedMilliseconds < 250)
+                    {
+                        status = "Casting...";
+                        return false;
+                    }
+
+                    status = $"Ready ({actorSkill.Name})";
+                    return true;
+                }
+            }
+
+            if (timer.ElapsedMilliseconds < cooldownMs)
+            {
+                long rem = cooldownMs - timer.ElapsedMilliseconds;
+                status = $"Cooldown ({(rem / 1000f):F1}s)";
+                return false;
+            }
+
+            status = actorSkill != null ? $"Ready ({actorSkill.Name})" : "Ready";
+            return true;
+        }
+
+        private void ProcessSkill(
+            bool isEnabled,
+            Keys key,
+            int cooldownMs,
+            bool useWhenAvailable,
+            bool tracingEnabled,
+            int tracingRange,
+            Stopwatch timer)
+        {
+            if (!isEnabled || key == Keys.None) return;
+
+            bool isReady = IsSkillReady(key, timer, cooldownMs, useWhenAvailable, out _);
+            if (!isReady) return;
+
+            bool canCast = !tracingEnabled || TraceMonster(tracingRange);
+            if (canCast)
+            {
+                timer.Restart();
+                SendKeyPress((byte)key);
+            }
+        }
+
         private void HandleSkills()
         {
             var life = GameController.Player?.GetComponent<Life>();
@@ -216,37 +310,34 @@ namespace AutoFlask
             if (life.CurMana < minMana) return;
 
             // Skill 1
-            if (Settings.Skill1Enabled.Value && _skill1Timer.ElapsedMilliseconds >= Settings.Skill1Cooldown.Value)
-            {
-                bool canCast = !Settings.Skill1TracingEnabled.Value || TraceMonster(Settings.Skill1TracingRange.Value);
-                if (canCast)
-                {
-                    _skill1Timer.Restart();
-                    SendKeyPress((byte)Settings.Skill1Key.Value.Key);
-                }
-            }
+            ProcessSkill(
+                Settings.Skill1Enabled.Value,
+                Settings.Skill1Key.Value.Key,
+                Settings.Skill1Cooldown.Value,
+                Settings.Skill1UseWhenAvailable.Value,
+                Settings.Skill1TracingEnabled.Value,
+                Settings.Skill1TracingRange.Value,
+                _skill1Timer);
 
             // Skill 2
-            if (Settings.Skill2Enabled.Value && _skill2Timer.ElapsedMilliseconds >= Settings.Skill2Cooldown.Value)
-            {
-                bool canCast = !Settings.Skill2TracingEnabled.Value || TraceMonster(Settings.Skill2TracingRange.Value);
-                if (canCast)
-                {
-                    _skill2Timer.Restart();
-                    SendKeyPress((byte)Settings.Skill2Key.Value.Key);
-                }
-            }
+            ProcessSkill(
+                Settings.Skill2Enabled.Value,
+                Settings.Skill2Key.Value.Key,
+                Settings.Skill2Cooldown.Value,
+                Settings.Skill2UseWhenAvailable.Value,
+                Settings.Skill2TracingEnabled.Value,
+                Settings.Skill2TracingRange.Value,
+                _skill2Timer);
 
             // Skill 3
-            if (Settings.Skill3Enabled.Value && _skill3Timer.ElapsedMilliseconds >= Settings.Skill3Cooldown.Value)
-            {
-                bool canCast = !Settings.Skill3TracingEnabled.Value || TraceMonster(Settings.Skill3TracingRange.Value);
-                if (canCast)
-                {
-                    _skill3Timer.Restart();
-                    SendKeyPress((byte)Settings.Skill3Key.Value.Key);
-                }
-            }
+            ProcessSkill(
+                Settings.Skill3Enabled.Value,
+                Settings.Skill3Key.Value.Key,
+                Settings.Skill3Cooldown.Value,
+                Settings.Skill3UseWhenAvailable.Value,
+                Settings.Skill3TracingEnabled.Value,
+                Settings.Skill3TracingRange.Value,
+                _skill3Timer);
         }
         #endregion
 
@@ -467,21 +558,66 @@ namespace AutoFlask
             if (Settings.ShowSkillsOnHud.Value)
             {
                 var skillParts = new List<string>();
-                if (Settings.Skill1Enabled.Value)
+                for (int i = 0; i < 3; i++)
                 {
-                    long rem = Math.Max(0, Settings.Skill1Cooldown.Value - _skill1Timer.ElapsedMilliseconds);
-                    skillParts.Add($"S1: {(rem > 0 ? $"{rem / 1000f:F1}s" : "RDY")}");
+                    bool enabled = i switch
+                    {
+                        0 => Settings.Skill1Enabled.Value,
+                        1 => Settings.Skill2Enabled.Value,
+                        _ => Settings.Skill3Enabled.Value
+                    };
+                    if (!enabled) continue;
+
+                    Keys key = i switch
+                    {
+                        0 => Settings.Skill1Key.Value.Key,
+                        1 => Settings.Skill2Key.Value.Key,
+                        _ => Settings.Skill3Key.Value.Key
+                    };
+
+                    int cd = i switch
+                    {
+                        0 => Settings.Skill1Cooldown.Value,
+                        1 => Settings.Skill2Cooldown.Value,
+                        _ => Settings.Skill3Cooldown.Value
+                    };
+
+                    bool avail = i switch
+                    {
+                        0 => Settings.Skill1UseWhenAvailable.Value,
+                        1 => Settings.Skill2UseWhenAvailable.Value,
+                        _ => Settings.Skill3UseWhenAvailable.Value
+                    };
+
+                    Stopwatch timer = i switch
+                    {
+                        0 => _skill1Timer,
+                        1 => _skill2Timer,
+                        _ => _skill3Timer
+                    };
+
+                    bool isReady = IsSkillReady(key, timer, cd, avail, out string status);
+                    string tag;
+                    if (isReady)
+                    {
+                        tag = "RDY";
+                    }
+                    else if (status.StartsWith("Cooldown ("))
+                    {
+                        tag = status.Replace("Cooldown (", "").Replace(")", "");
+                    }
+                    else if (status.StartsWith("On Cooldown"))
+                    {
+                        tag = "CD";
+                    }
+                    else
+                    {
+                        tag = status;
+                    }
+
+                    skillParts.Add($"S{i + 1}: {tag}");
                 }
-                if (Settings.Skill2Enabled.Value)
-                {
-                    long rem = Math.Max(0, Settings.Skill2Cooldown.Value - _skill2Timer.ElapsedMilliseconds);
-                    skillParts.Add($"S2: {(rem > 0 ? $"{rem / 1000f:F1}s" : "RDY")}");
-                }
-                if (Settings.Skill3Enabled.Value)
-                {
-                    long rem = Math.Max(0, Settings.Skill3Cooldown.Value - _skill3Timer.ElapsedMilliseconds);
-                    skillParts.Add($"S3: {(rem > 0 ? $"{rem / 1000f:F1}s" : "RDY")}");
-                }
+
                 if (skillParts.Count > 0)
                 {
                     lines.Add(($"Skills: {string.Join(" | ", skillParts)}", Color.LightSkyBlue));
@@ -590,7 +726,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.1.1");
+            ImGui.TextDisabled("v1.2.0");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -819,9 +955,9 @@ namespace AutoFlask
             ImGui.TextDisabled("Skills will not cast if current Mana is below this value.");
             ImGui.Separator();
 
-            DrawSingleSkillCard(1, Settings.Skill1Enabled, Settings.Skill1Key, Settings.Skill1Cooldown, Settings.Skill1TracingEnabled, Settings.Skill1TracingRange, _skill1Timer);
-            DrawSingleSkillCard(2, Settings.Skill2Enabled, Settings.Skill2Key, Settings.Skill2Cooldown, Settings.Skill2TracingEnabled, Settings.Skill2TracingRange, _skill2Timer);
-            DrawSingleSkillCard(3, Settings.Skill3Enabled, Settings.Skill3Key, Settings.Skill3Cooldown, Settings.Skill3TracingEnabled, Settings.Skill3TracingRange, _skill3Timer);
+            DrawSingleSkillCard(1, Settings.Skill1Enabled, Settings.Skill1Key, Settings.Skill1Cooldown, Settings.Skill1UseWhenAvailable, Settings.Skill1TracingEnabled, Settings.Skill1TracingRange, _skill1Timer);
+            DrawSingleSkillCard(2, Settings.Skill2Enabled, Settings.Skill2Key, Settings.Skill2Cooldown, Settings.Skill2UseWhenAvailable, Settings.Skill2TracingEnabled, Settings.Skill2TracingRange, _skill2Timer);
+            DrawSingleSkillCard(3, Settings.Skill3Enabled, Settings.Skill3Key, Settings.Skill3Cooldown, Settings.Skill3UseWhenAvailable, Settings.Skill3TracingEnabled, Settings.Skill3TracingRange, _skill3Timer);
         }
 
         private void DrawSingleSkillCard(
@@ -829,20 +965,36 @@ namespace AutoFlask
             ToggleNode enabledNode,
             HotkeyNodeV2 keyNode,
             RangeNode<int> cdNode,
+            ToggleNode useWhenAvailableNode,
             ToggleNode tracingNode,
             RangeNode<int> rangeNode,
             Stopwatch timer)
         {
             ImGui.PushID($"SkillCard_{skillIndex}");
 
-            long remainingCd = Math.Max(0, cdNode.Value - timer.ElapsedMilliseconds);
-            string cdStatus = remainingCd > 0 ? $"{remainingCd / 1000f:F1}s" : "READY";
+            bool isReady = IsSkillReady(keyNode.Value.Key, timer, cdNode.Value, useWhenAvailableNode.Value, out string liveStatus);
+            var detectedSkill = FindActorSkill(keyNode.Value.Key);
 
-            bool open = ImGui.CollapsingHeader($"Skill [{skillIndex}] - Key: {keyNode.Value.Key} | Status: {cdStatus}", ImGuiTreeNodeFlags.DefaultOpen);
+            string titleStatus = isReady ? "READY" : liveStatus;
+            bool open = ImGui.CollapsingHeader($"Skill [{skillIndex}] - Key: {keyNode.Value.Key} | Status: {titleStatus}", ImGuiTreeNodeFlags.DefaultOpen);
             if (open)
             {
                 bool enabled = enabledNode.Value;
                 if (ImGui.Checkbox("Enable Skill", ref enabled)) enabledNode.Value = enabled;
+
+                ImGui.SameLine();
+                ImGui.Text("Status:");
+                ImGui.SameLine();
+                var statusColor = isReady ? new Vector4(0.2f, 1f, 0.4f, 1f) :
+                                  liveStatus.StartsWith("On Cooldown") ? new Vector4(1f, 0.7f, 0.2f, 1f) :
+                                  new Vector4(0.7f, 0.7f, 0.7f, 1f);
+                ImGui.TextColored(statusColor, liveStatus);
+
+                if (detectedSkill != null)
+                {
+                    ImGui.SameLine();
+                    ImGui.TextDisabled($"({detectedSkill.Name})");
+                }
 
                 ImGui.SameLine();
                 if (ImGui.Button("Test Cast"))
@@ -851,6 +1003,13 @@ namespace AutoFlask
                 }
 
                 DrawKeySelector("Cast Key", keyNode);
+
+                bool useWhenAvail = useWhenAvailableNode.Value;
+                if (ImGui.Checkbox("Use When Available (Tự động dùng khi skill hồi chiêu)", ref useWhenAvail))
+                {
+                    useWhenAvailableNode.Value = useWhenAvail;
+                }
+                ImGui.TextDisabled("Tự động tung chiêu ngay khi kỹ năng vừa hết thời gian hồi (Off Cooldown) trong game.");
 
                 int cd = cdNode.Value;
                 if (ImGui.SliderInt("Cooldown (ms)", ref cd, 100, 30000)) cdNode.Value = cd;

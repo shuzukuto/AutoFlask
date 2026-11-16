@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.0] - 2026-11-16 15:58:56
+
+### User Request
+> bổ sung cho Skill: thêm tính năng "Use when available" để tự động dùng khi skill hồi chiêu
+
+### Added
+- Tính năng "Use when available" cho 3 kỹ năng (`Skill1UseWhenAvailable`, `Skill2UseWhenAvailable`, `Skill3UseWhenAvailable`): Tự động phát hiện trạng thái hồi chiêu thực tế trong game qua `ActorSkill` (`!s.IsOnCooldown && s.CanBeUsed`) và xuất chiêu tức thì khi kỹ năng hồi xong.
+- Tự động nhận diện tên kỹ năng PoE theo slot phím (`Q`, `W`, `E`, `R`, `T`) và hiển thị trực quan trong giao diện cài đặt (ví dụ: `(Molten Shell)`, `(Steelskin)`).
+- Chẩn đoán trạng thái kỹ năng thời gian thực trong giao diện: `Ready`, `On Cooldown`, `No Charges`, `Cannot Use`.
+
+### Changed
+- Cập nhật hiển thị HUD On-Screen cho kỹ năng: Đồng bộ hiển thị trạng thái `RDY` hoặc `CD` thời gian thực theo in-game cooldown và `IsSkillReady`.
+- Nâng cấp phiên bản SemVer từ `v1.1.1` lên `v1.2.0`.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlaskSettings.cs
+- README.md
+- rules.md
+- changelog.md
+
 ## [v1.1.1] - 2026-11-16 15:42:48
 
 ### User Request

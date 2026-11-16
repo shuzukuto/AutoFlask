@@ -149,10 +149,13 @@ namespace AutoFlask
         [Menu("Show Skill Cooldowns on HUD", 507, 500)]
         public ToggleNode ShowSkillsOnHud { get; set; } = new ToggleNode(true);
 
-        [Menu("Show Flask Status on HUD", 508, 500)]
+        [Menu("Show Skill Hotkeys on HUD", 508, 500)]
+        public ToggleNode ShowSkillKeysOnHud { get; set; } = new ToggleNode(true);
+
+        [Menu("Show Flask Status on HUD", 509, 500)]
         public ToggleNode ShowFlaskStatusOnHud { get; set; } = new ToggleNode(true);
 
-        [Menu("Draw HUD Background Box", 509, 500)]
+        [Menu("Draw HUD Background Box", 510, 500)]
         public ToggleNode DrawHudBackground { get; set; } = new ToggleNode(false);
         #endregion
     }

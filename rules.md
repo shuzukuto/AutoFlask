@@ -50,7 +50,7 @@ Giao diện cài đặt phải được tổ chức thành 5 Tab rõ ràng:
    - Nút `Test Cast` trực tiếp.
 3. **📊 HUD Overlay**:
    - Tùy chọn vị trí màn hình (X, Y) và 4 nút Preset nhanh góc màn hình.
-   - Bật/tắt linh hoạt từng dòng thông tin (Vitals, ES, Area Stopwatch, Skills, Flasks).
+   - Bật/tắt linh hoạt từng dòng thông tin (Vitals, ES, Area Stopwatch, Skills kèm tùy chọn hiển thị phím tắt `[W]`, `[E]`, `[R]`, Flasks).
 4. **🛡️ Safety & Config**:
    - Kiểm tra cửa sổ game có đang ở tiền cảnh (`IsForeground`).
    - Tạm dừng tại thị trấn và Hideout (`IsTown`, `IsHideout`).

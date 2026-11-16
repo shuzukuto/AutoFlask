@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.2] - 2026-11-16 16:25:40
+
+### User Request
+> thêm hiển thị phím tắt của skill trên HUD
+
+### Added
+- Hiển thị phím tắt tương ứng của từng kỹ năng trên dòng trạng thái Skills của HUD On-Screen trong game (định dạng trực quan: `S1[W]: RDY | S2[E]: 3.5s | S3[R]: 15/30`).
+- Thêm cài đặt `ShowSkillKeysOnHud` (mặc định bật) trong AutoFlaskSettings và checkbox `Show Hotkeys (Hiện phím tắt)` tại tab cài đặt HUD Overlay.
+- Hàm chuẩn hóa tên phím `FormatKeyName` giúp hiển thị gọn gàng các phím số (`D1`..`D9` -> `1`..`9`) và ký tự chữ cái trên HUD.
+
+### Changed
+- Nâng cấp phiên bản SemVer từ `v1.2.1` lên `v1.2.2`.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlaskSettings.cs
+- rules.md
+- changelog.md
+
 ## [v1.2.1] - 2026-11-16 16:21:00
 
 ### User Request

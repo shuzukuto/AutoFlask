@@ -733,7 +733,11 @@ namespace AutoFlask
                         tag = status;
                     }
 
-                    skillParts.Add($"S{i + 1}: {tag}");
+                    string skillLabel = (Settings.ShowSkillKeysOnHud.Value && key != Keys.None)
+                        ? $"S{i + 1}[{FormatKeyName(key)}]"
+                        : $"S{i + 1}";
+
+                    skillParts.Add($"{skillLabel}: {tag}");
                 }
 
                 if (skillParts.Count > 0)
@@ -844,7 +848,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.2.1");
+            ImGui.TextDisabled("v1.2.2");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -1254,6 +1258,13 @@ namespace AutoFlask
             bool showSkills = Settings.ShowSkillsOnHud.Value;
             if (ImGui.Checkbox("Show Skill Cooldowns", ref showSkills)) Settings.ShowSkillsOnHud.Value = showSkills;
 
+            if (Settings.ShowSkillsOnHud.Value)
+            {
+                ImGui.SameLine();
+                bool showSkillKeys = Settings.ShowSkillKeysOnHud.Value;
+                if (ImGui.Checkbox("Show Hotkeys (Hiện phím tắt)", ref showSkillKeys)) Settings.ShowSkillKeysOnHud.Value = showSkillKeys;
+            }
+
             bool showFlasks = Settings.ShowFlaskStatusOnHud.Value;
             if (ImGui.Checkbox("Show Flask Status Badges", ref showFlasks)) Settings.ShowFlaskStatusOnHud.Value = showFlasks;
 
@@ -1296,6 +1307,24 @@ namespace AutoFlask
                 node.Value = node.Value with { Key = CommonKeys[currentIndex] };
                 Input.RegisterKey(node.Value.Key);
             }
+        }
+
+        private static string FormatKeyName(Keys key)
+        {
+            return key switch
+            {
+                Keys.D0 => "0",
+                Keys.D1 => "1",
+                Keys.D2 => "2",
+                Keys.D3 => "3",
+                Keys.D4 => "4",
+                Keys.D5 => "5",
+                Keys.D6 => "6",
+                Keys.D7 => "7",
+                Keys.D8 => "8",
+                Keys.D9 => "9",
+                _ => key.ToString()
+            };
         }
         #endregion
     }

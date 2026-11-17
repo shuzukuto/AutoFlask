@@ -22,16 +22,18 @@ Tài liệu đặc tả kiến trúc và tiêu chuẩn thiết kế còn hiệu 
 - Tiêu chí ưu tiên: Quái vật còn sống, thù địch, có thể target được, độ hiếm cao nhất (`Rarity`), sau đó đến khoảng cách gần người chơi nhất.
 - Chuyển đổi tọa độ qua `Camera.WorldToScreen(PosNum)` sử dụng `System.Numerics.Vector3` và `System.Numerics.Vector2`.
 
-### 1.4. Cơ chế Kỹ năng Tự động, Vaal Skills & Use When Available
-- **Kỹ năng thông thường (Regular Skills)**:
-  - Tự động ánh xạ phím gán (`Keys.Q`, `W`, `E`, `R`, `T`) tới chỉ số ô kỹ năng (`SkillSlotIndex`) trong `Actor.ActorSkills`.
-  - Khi bật `UseWhenAvailable`: Kiểm tra trạng thái hồi chiêu thực tế trong game (`!actorSkill.IsOnCooldown && actorSkill.CanBeUsed`) để tự động tung chiêu ngay khi hồi xong, đồng thời duy trì bộ đếm dự phòng an toàn.
-- **Kỹ năng Vaal (Vaal Skills)**:
-  - Tự động nhận diện qua cờ `ActorSkill.IsVaalSkill`, tiền tố tên `"Vaal "`, hoặc tùy chọn `IsVaalSkill` trong cài đặt.
-  - Phụ thuộc tích lũy Souls (`CurrVaalSouls` từ `Actor.ActorVaalSkills` so với `SoulsPerUse` / `VaalMaxSouls` hoặc `ActorSkill.HasEnoughSouls`) thay vì thời gian hồi chiêu (`Cooldown`).
-  - Bỏ qua ràng buộc cooldown thông thường; kiểm tra `ActorSkill.CanBeUsed` để tôn trọng trạng thái `Soul Gain Prevention` (ngăn tích và dùng soul tạm thời sau khi cast) và debuff.
-  - Khi bật `UseWhenAvailable`: Tự động thi triển ngay khi tích đủ Souls và không bị Soul Gain Prevention.
-  - Hiển thị thanh tiến trình Souls động trên giao diện ImGui (`CurrSouls / SoulsPerUse`) và rút gọn trên HUD (`S1: 15/30`, `S1: Prev`, `S1: RDY`).
+### 1.4. Cơ chế Kỹ năng Tự động: Phân định Rõ ràng Skill Thường (Cooldown) vs Vaal Skill (Soul)
+- **Cơ chế Phân định (Authoritative Toggle)**: Tùy chọn tick chọn `Vaal Skill (Cần Soul)` được đặt trực tiếp bên cạnh từng kỹ năng để người dùng chủ động chỉ định cách bot xử lý chiêu thức:
+  - **Skill Thường (Unchecked - Cooldown Mode)**:
+    - Bot quản lý theo **Thời gian hồi chiêu (Cooldown)** trong game: Kiểm tra `!actorSkill.IsOnCooldown && actorSkill.CanBeUsed`.
+    - Tuyệt đối không đòi hỏi Souls hay phụ thuộc Soul Gain Prevention.
+    - Hỗ trợ thanh trượt chỉnh Cooldown (ms) với các nút thiết lập nhanh 2s, 5s, 10s.
+  - **Vaal Skill (Checked - Soul Mode)**:
+    - Bot quản lý theo **Linh hồn tích lũy (Souls)**: Kiểm tra `CurrVaalSouls >= SoulsPerUse` và không trong trạng thái `Soul Gain Prevention`.
+    - Bỏ qua ràng buộc Cooldown thông thường.
+    - Hiển thị thanh tiến trình Soul Bar trực quan (`currSouls / soulsPerUse`) và rút gọn trên HUD (`S1[T]: 15/30`, `S1[T]: Prev`, `S1[T]: RDY`).
+- **Use When Available**: Hoạt động chuẩn xác theo chế độ đã chọn (vừa hồi xong đối với skill thường, hoặc vừa đủ Soul & hết Soul Prevention đối với Vaal Skill).
+- **Gợi ý thông minh (Smart Detection Alert)**: Khi phát hiện kỹ năng trên phím gán có phiên bản Vaal trong game nhưng người dùng chưa tick chọn, hiển thị cảnh báo gợi ý kèm nút 1-click chuyển nhanh sang Vaal Skill.
 
 ### 1.5. Cơ chế Bình Thuốc & Nhận diện Hiệu ứng Buff (Utility Flask Buff Architecture)
 - **Đồng bộ tự động (Auto-Sync)**: Đọc loại bình thực tế từ bộ nhớ `PlayerInventories` (1: HP, 2: Mana, 3: Hybrid, 4: Utility) và lưu vết bộ nhớ tạm (`_lastDetectedFlaskType`) để duy trì đúng loại bình qua các lần chuyển map / màn hình chờ.

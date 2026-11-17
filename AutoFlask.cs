@@ -316,7 +316,7 @@ namespace AutoFlask
 
             if (actorSkill != null)
             {
-                bool isVaalSkill = isVaalMode || actorSkill.IsVaalSkill || (actorSkill.Name != null && actorSkill.Name.StartsWith("Vaal "));
+                bool isVaalSkill = isVaalMode;
 
                 if (isVaalSkill)
                 {
@@ -1032,7 +1032,7 @@ namespace AutoFlask
             // Banner & Quick Control
             ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "=== AUTO FLASK & SKILL BOT ===");
             ImGui.SameLine();
-            ImGui.TextDisabled("v1.2.5");
+            ImGui.TextDisabled("v1.3.0");
 
             bool isGlobalActive = Settings.IsAutoFlaskEnabled.Value;
             if (isGlobalActive)
@@ -1360,7 +1360,7 @@ namespace AutoFlask
             bool isVaal = isVaalNode.Value;
             var detectedSkill = FindActorSkill(keyNode.Value.Key, isVaal);
             bool autoDetectedVaal = detectedSkill != null && (detectedSkill.IsVaalSkill || (detectedSkill.Name != null && detectedSkill.Name.StartsWith("Vaal ")));
-            bool effectiveVaal = isVaal || autoDetectedVaal;
+            bool effectiveVaal = isVaal;
 
             bool isReady = IsSkillReady(keyNode.Value.Key, timer, cdNode.Value, effectiveVaal, useWhenAvailableNode.Value, out string liveStatus);
 
@@ -1368,15 +1368,37 @@ namespace AutoFlask
             var vaalSkillObj = effectiveVaal && detectedSkill != null ? FindVaalSkill(actor, detectedSkill) : null;
 
             string titleStatus = isReady ? "READY" : liveStatus;
-            string vaalPrefix = effectiveVaal ? "[VAAL] " : "";
-            bool open = ImGui.CollapsingHeader($"{vaalPrefix}Skill [{skillIndex}] - Key: {keyNode.Value.Key} | Status: {titleStatus}", ImGuiTreeNodeFlags.DefaultOpen);
+            string modeTag = effectiveVaal ? "[⚡ VAAL SOUL]" : "[⏱️ COOLDOWN]";
+            string skillNameStr = detectedSkill != null ? $" | {detectedSkill.Name}" : "";
+            bool open = ImGui.CollapsingHeader($"{modeTag} Skill [{skillIndex}] - Key: {keyNode.Value.Key}{skillNameStr} | Status: {titleStatus}", ImGuiTreeNodeFlags.DefaultOpen);
             if (open)
             {
+                // Top Action Row: Checkboxes directly beside the skill
                 bool enabled = enabledNode.Value;
-                if (ImGui.Checkbox("Enable Skill", ref enabled)) enabledNode.Value = enabled;
+                if (ImGui.Checkbox("Bật Skill", ref enabled)) enabledNode.Value = enabled;
 
                 ImGui.SameLine();
-                ImGui.Text("Status:");
+                bool vaalChecked = isVaalNode.Value;
+                if (ImGui.Checkbox("Vaal Skill (Cần Soul)", ref vaalChecked))
+                {
+                    isVaalNode.Value = vaalChecked;
+                }
+
+                ImGui.SameLine();
+                bool useWhenAvail = useWhenAvailableNode.Value;
+                if (ImGui.Checkbox("Use When Available", ref useWhenAvail))
+                {
+                    useWhenAvailableNode.Value = useWhenAvail;
+                }
+
+                ImGui.SameLine();
+                if (ImGui.Button("Test Cast"))
+                {
+                    SendKeyPress((byte)keyNode.Value.Key);
+                }
+
+                // Row 2: Status & Detected Skill Info
+                ImGui.Text("Trạng thái:");
                 ImGui.SameLine();
                 var statusColor = isReady ? new Vector4(0.2f, 1f, 0.4f, 1f) :
                                   liveStatus.StartsWith("Souls") ? new Vector4(0.9f, 0.4f, 1f, 1f) :
@@ -1388,30 +1410,25 @@ namespace AutoFlask
                 if (detectedSkill != null)
                 {
                     ImGui.SameLine();
-                    ImGui.TextDisabled($"({detectedSkill.Name})");
+                    ImGui.TextDisabled($"[Skill game: {detectedSkill.Name}]");
                 }
 
-                ImGui.SameLine();
-                if (ImGui.Button("Test Cast"))
-                {
-                    SendKeyPress((byte)keyNode.Value.Key);
-                }
-
-                DrawKeySelector("Cast Key", keyNode);
-
-                bool vaalChecked = isVaalNode.Value;
-                if (ImGui.Checkbox("Is Vaal Skill (Phụ thuộc Soul, không hồi chiêu thường)", ref vaalChecked))
-                {
-                    isVaalNode.Value = vaalChecked;
-                }
                 if (autoDetectedVaal && !vaalChecked)
                 {
                     ImGui.SameLine();
-                    ImGui.TextColored(new Vector4(0.8f, 0.5f, 1f, 1f), "[Tự động nhận diện Vaal Skill]");
+                    ImGui.TextColored(new Vector4(1f, 0.8f, 0.2f, 1f), "[⚠️ Phát hiện Vaal Skill]");
+                    ImGui.SameLine();
+                    if (ImGui.SmallButton($"Chuyển sang Vaal Skill##switch_{skillIndex}"))
+                    {
+                        isVaalNode.Value = true;
+                    }
                 }
 
+                // Row 3: Visual Mode Indicator & Progress
                 if (effectiveVaal)
                 {
+                    ImGui.TextColored(new Vector4(0.85f, 0.4f, 1f, 1f), "► Chế độ: VAAL SKILL (Phụ thuộc Soul, tự tung khi đủ Soul & không bị Soul Prevention)");
+
                     int currSouls = vaalSkillObj?.CurrVaalSouls ?? 0;
                     int maxSouls = vaalSkillObj?.VaalMaxSouls ?? 0;
                     int soulsPerUse = (detectedSkill != null && detectedSkill.SoulsPerUse > 0) ? detectedSkill.SoulsPerUse : maxSouls;
@@ -1419,29 +1436,20 @@ namespace AutoFlask
                     float progress = soulsPerUse > 0 ? Math.Min(1f, (float)currSouls / soulsPerUse) : 0f;
                     string soulsOverlay = soulsPerUse > 0 ? $"{currSouls} / {soulsPerUse} Souls (Max: {maxSouls})" : $"{currSouls} Souls";
                     ImGui.ProgressBar(progress, new Vector2(-1, 0), soulsOverlay);
-
-                    ImGui.TextDisabled("Vaal Skill phụ thuộc Souls thay vì thời gian hồi chiêu. Khi đủ Souls và không bị Soul Prevention sẽ sẵn sàng kích hoạt.");
-                }
-
-                bool useWhenAvail = useWhenAvailableNode.Value;
-                string useAvailLabel = effectiveVaal ? "Use When Available (Tự động dùng ngay khi đủ Souls)" : "Use When Available (Tự động dùng khi skill hồi chiêu)";
-                if (ImGui.Checkbox(useAvailLabel, ref useWhenAvail))
-                {
-                    useWhenAvailableNode.Value = useWhenAvail;
-                }
-                if (effectiveVaal)
-                {
-                    ImGui.TextDisabled("Tự động tung chiêu ngay khi tích lũy đủ Souls và không trong trạng thái Soul Gain Prevention.");
                 }
                 else
                 {
-                    ImGui.TextDisabled("Tự động tung chiêu ngay khi kỹ năng vừa hết thời gian hồi (Off Cooldown) trong game.");
+                    ImGui.TextColored(new Vector4(0.2f, 0.8f, 1f, 1f), "► Chế độ: SKILL THƯỜNG (Quản lý theo Cooldown thời gian hồi chiêu)");
                 }
 
+                // Key selector
+                DrawKeySelector("Cast Key", keyNode);
+
+                // Cooldown controls (for regular skills or vaal skills without auto-use)
                 if (!effectiveVaal || !useWhenAvailableNode.Value)
                 {
                     int cd = cdNode.Value;
-                    string cdLabel = effectiveVaal ? "Min Interval / Cooldown Throttling (ms)" : "Cooldown (ms)";
+                    string cdLabel = effectiveVaal ? "Min Interval / Cooldown Throttling (ms)" : "Thời gian hồi chiêu - Cooldown (ms)";
                     if (ImGui.SliderInt(cdLabel, ref cd, 100, 30000)) cdNode.Value = cd;
 
                     ImGui.SameLine();
@@ -1458,7 +1466,7 @@ namespace AutoFlask
                 if (tracingNode.Value)
                 {
                     int range = rangeNode.Value;
-                    if (ImGui.SliderInt("Tracing Max Range", ref range, 30, 150)) rangeNode.Value = range;
+                    if (ImGui.SliderInt("Phạm vi quét quái (Tracing Max Range)", ref range, 30, 150)) rangeNode.Value = range;
                     ImGui.TextDisabled("Cursor will snap to nearest high-rarity monster in range before casting.");
                 }
 

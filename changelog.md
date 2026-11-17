@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.0] - 2026-11-17 15:50:00
+
+### User Request
+> cập nhật thêm "Vaal Skill" để tick chọn bên cạnh skill, giúp bot xác định đó là skill thường: có cooldown và Vaal Skill cần Soul để dùng chiêu như skill T hiện tại
+
+### Added
+- Đưa tùy chọn tick chọn `Vaal Skill (Cần Soul)` lên ngay dòng đầu tiên cạnh từng thẻ kỹ năng (`[ ] Bật Skill` | `[ ] Vaal Skill (Cần Soul)` | `[ ] Use When Available` | `[Test Cast]`), giúp người dùng chủ động chỉ định và chuyển đổi tức thì giữa chế độ Skill Thường và Vaal Skill.
+- Bổ sung huy hiệu phân loại trực quan trên tiêu đề CollapsingHeader: `[⚡ VAAL SOUL]` đối với Vaal Skill hoặc `[⏱️ COOLDOWN]` đối với Skill Thường, kèm tên kỹ năng PoE đọc được từ game.
+- Bổ sung biểu ngữ trạng thái hướng dẫn (Mode Banner):
+  - Khi tick chọn Vaal Skill: Hiển thị thanh tiến trình Soul Bar (`currSouls / soulsPerUse`) kèm thông điệp hướng dẫn rõ ràng.
+  - Khi không tick chọn: Hiển thị chế độ Skill Thường quản lý theo Cooldown kèm thanh trượt thiết lập thời gian hồi chiêu.
+- Bổ sung nút 1-click sửa nhanh `[⚡ Chuyển sang Vaal Skill]` khi game phát hiện trên phím gán có kỹ năng Vaal mà người dùng chưa tick chọn.
+- Cập nhật cấu hình mặc định trong `AutoFlask_settings.json`: Thiết lập Skill 1 (Phím T) thành Vaal Skill theo đúng thực tế thiết lập của người dùng.
+
+### Changed
+- Chuẩn hóa logic `IsSkillReady` và `FindActorSkill`: Khi người dùng không tick chọn Vaal Skill, bot đảm bảo 100% đối xử với kỹ năng đó như Skill Thường (dựa vào Cooldown, `!actorSkill.IsOnCooldown && actorSkill.CanBeUsed`), không bị ép buộc đòi hỏi Souls. Khi người dùng tick chọn Vaal Skill, bot chuyển sang kiểm tra Souls và trạng thái Soul Gain Prevention.
+- Nâng cấp phiên bản SemVer từ `v1.2.5` lên `v1.3.0` (Minor release: Bổ sung tính năng điều khiển chế độ Vaal Skill / Skill Thường trực quan).
+- Cập nhật hiển thị huy hiệu phiên bản trên giao diện ImGui thành `v1.3.0`.
+
+### Files touched
+- AutoFlask.cs
+- AutoFlask_settings.json
+- rules.md
+- changelog.md
+
 ## [v1.2.5] - 2026-11-16 21:25:00
 
 ### User Request
